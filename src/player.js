@@ -1,28 +1,97 @@
 import * as THREE from 'three';
-import { scene, camera, renderer } from './main.js';
 
 
-const geometry = new THREE.BoxGeometry()
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-const cube = new THREE.Mesh(geometry, material)
-cube.position.set(0, 10, 0)
+
+// Thêm GridHelper vào scene
+const gridHelper = new THREE.GridHelper(100, 10, 0x00ff00, 0x444444);
+
+// add a plane
+const Pgeometry = new THREE.PlaneGeometry(100, 100);
+const Pmaterial = new THREE.MeshBasicMaterial({
+  color: 0xffffff,
+  side: THREE.DoubleSide,
+});
+const plane = new THREE.Mesh(Pgeometry, Pmaterial);
+plane.rotation.x = Math.PI * -0.5;
+
+
+
+
+// cube
+const geometry = new THREE.BoxGeometry();
+const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const cube = new THREE.Mesh(geometry, material);
+
+cube.position.set(0, 20, 0)
+
+
+
+// create a sphere
+
+const SphereGeometry = new THREE.SphereGeometry(4);
+const SphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 , wireframe: true});
+const Sphere = new THREE.Mesh(SphereGeometry, SphereMaterial);
+Sphere.position.set(20, 30, 20);
+
+
+
+
+
+
+let arrowW = false;
+let arrowD = false;
+let arrowA = false;
+let arrowS = false;
 
 document.addEventListener('keydown', (event) => {
-    switch (event.key) {
-        case 'ArrowUp':
-            cube.position.y += 0.1;
+    if (event.key === 'w') arrowW = true;
+    if (event.key === 'd') arrowD = true;
+    if (event.key === 'a') arrowA = true;
+    if (event.key === 's') arrowS = true;
+
+    switch (true) {
+        case arrowW && arrowD:
+            cube.position.z += 0.6; 
+            cube.position.x += 0.6;
             break;
-        case 'ArrowDown':
-            cube.position.y -= 0.1;
+        case arrowS && arrowD:
+            cube.position.z += 0.6; 
+            cube.position.x -= 0.6;
             break;
-        case 'ArrowLeft':
-            cube.position.x -= 0.1;
+        case arrowS && arrowA:
+            cube.position.z -= 0.6; 
+            cube.position.x -= 0.6;
+            break;  
+        case arrowW && arrowA:
+            cube.position.z -= 0.6; 
+            cube.position.x += 0.6;
+            break;    
+        case arrowW:    
+            cube.position.x += 0.6;
             break;
-        case 'ArrowRight':
-            cube.position.x += 0.1;
+        case arrowD:
+            cube.position.z += 0.6;
             break;
+        case arrowA:
+            cube.position.z -= 0.6;
+            break;
+        case arrowS:
+            cube.position.x -= 0.6;
+            break;
+
+
     }
 });
 
-scene.add(cube)
-export { cube }
+document.addEventListener('keyup', (event) => {
+    if (event.key === 'w') arrowW = false;
+    if (event.key === 'd') arrowD = false;
+    if (event.key === 'a') arrowA = false;
+    if (event.key === 's') arrowS = false;
+
+    
+
+});
+cube.scale.set(10, 10, 10);   //size of cube
+//scene.add(cube)
+export{cube, Sphere, plane, gridHelper}
