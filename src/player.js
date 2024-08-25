@@ -7,7 +7,7 @@ const gridHelper = new THREE.GridHelper(100, 10, 0x00ff00, 0x444444);
 
 // add a plane
 const Pgeometry = new THREE.PlaneGeometry(100, 100);
-const Pmaterial = new THREE.MeshBasicMaterial({
+const Pmaterial = new THREE.MeshStandardMaterial({
   color: 0xffffff,
   side: THREE.DoubleSide,
 });
@@ -29,10 +29,12 @@ cube.position.set(0, 20, 0)
 // create a sphere
 
 const SphereGeometry = new THREE.SphereGeometry(4);
-const SphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 , wireframe: true});
+const SphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 , wireframe: false});
 const Sphere = new THREE.Mesh(SphereGeometry, SphereMaterial);
 Sphere.position.set(20, 30, 20);
 
+// create a ambienlight
+const ambientLight = new THREE.AmbientLight(0x333333)
 
 
 
@@ -43,6 +45,8 @@ let arrowD = false;
 let arrowA = false;
 let arrowS = false;
 
+
+
 document.addEventListener('keydown', (event) => {
     if (event.key === 'w') arrowW = true;
     if (event.key === 'd') arrowD = true;
@@ -51,6 +55,7 @@ document.addEventListener('keydown', (event) => {
 
     switch (true) {
         case arrowW && arrowD:
+
             cube.position.z += 0.6; 
             cube.position.x += 0.6;
             break;
@@ -77,6 +82,7 @@ document.addEventListener('keydown', (event) => {
             break;
         case arrowS:
             cube.position.x -= 0.6;
+
             break;
 
 
@@ -92,6 +98,7 @@ document.addEventListener('keyup', (event) => {
     
 
 });
-cube.scale.set(10, 10, 10);   //size of cube
+
+cube.scale.set(5, 5, 5);   //size of cube
 //scene.add(cube)
-export{cube, Sphere, plane, gridHelper}
+export{cube, Sphere, plane, gridHelper, ambientLight}
