@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dat.gui": "^0.7.9",
     "save": "^2.9.0",
     "three": "^0.167.1"
   },
