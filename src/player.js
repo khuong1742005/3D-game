@@ -22,7 +22,7 @@ const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geometry, material);
 
-cube.position.set(0, 20, 0)
+cube.position.set(0, 5, 0)
 
 
 
@@ -44,64 +44,64 @@ const ambientLight = new THREE.AmbientLight(0x333333)
 
 
 
-let arrowW = false;
-let arrowD = false;
-let arrowA = false;
-let arrowS = false;
+// let arrowW = false;
+// let arrowD = false;
+// let arrowA = false;
+// let arrowS = false;
 
 
 
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'w') arrowW = true;
-    if (event.key === 'd') arrowD = true;
-    if (event.key === 'a') arrowA = true;
-    if (event.key === 's') arrowS = true;
+// document.addEventListener('keydown', (event) => {
+//     if (event.key === 'w') arrowW = true;
+//     if (event.key === 'd') arrowD = true;
+//     if (event.key === 'a') arrowA = true;
+//     if (event.key === 's') arrowS = true;
 
-    switch (true) {
-        case arrowW && arrowD:
+//     switch (true) {
+//         case arrowW && arrowD:
 
-            cube.position.z += 0.6; 
-            cube.position.x += 0.6;
-            break;
-        case arrowS && arrowD:
-            cube.position.z += 0.6; 
-            cube.position.x -= 0.6;
-            break;
-        case arrowS && arrowA:
-            cube.position.z -= 0.6; 
-            cube.position.x -= 0.6;
-            break;  
-        case arrowW && arrowA:
-            cube.position.z -= 0.6; 
-            cube.position.x += 0.6;
-            break;    
-        case arrowW:    
-            cube.position.x += 0.6;
-            break;
-        case arrowD:
-            cube.position.z += 0.6;
-            break;
-        case arrowA:
-            cube.position.z -= 0.6;
-            break;
-        case arrowS:
-            cube.position.x -= 0.6;
+//             cube.position.z += 0.6; 
+//             cube.position.x += 0.6;
+//             break;
+//         case arrowS && arrowD:
+//             cube.position.z += 0.6; 
+//             cube.position.x -= 0.6;
+//             break;
+//         case arrowS && arrowA:
+//             cube.position.z -= 0.6; 
+//             cube.position.x -= 0.6;
+//             break;  
+//         case arrowW && arrowA:
+//             cube.position.z -= 0.6; 
+//             cube.position.x += 0.6;
+//             break;    
+//         case arrowW:    
+//             cube.position.x += 0.6;
+//             break;
+//         case arrowD:
+//             cube.position.z += 0.6;
+//             break;
+//         case arrowA:
+//             cube.position.z -= 0.6;
+//             break;
+//         case arrowS:
+//             cube.position.x -= 0.6;
 
-            break;
+//             break;
 
 
-    }
-});
+//     }
+// });
 
-document.addEventListener('keyup', (event) => {
-    if (event.key === 'w') arrowW = false;
-    if (event.key === 'd') arrowD = false;
-    if (event.key === 'a') arrowA = false;
-    if (event.key === 's') arrowS = false;
+// document.addEventListener('keyup', (event) => {
+//     if (event.key === 'w') arrowW = false;
+//     if (event.key === 'd') arrowD = false;
+//     if (event.key === 'a') arrowA = false;
+//     if (event.key === 's') arrowS = false;
 
     
 
-});
+// });
 
 cube.scale.set(5, 5, 5);   //size of cube
 //scene.add(cube)

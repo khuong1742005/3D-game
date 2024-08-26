@@ -6,6 +6,7 @@ import * as dat from "dat.gui";
 import { Sequence } from "three/examples/jsm/libs/tween.module.js";
 import night from './mp4/night.mp4'
 import sun from './mp4/SunSurface.mp4'
+import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
 
 //Scene
 const scene = new THREE.Scene();
@@ -132,31 +133,222 @@ scene.add(spotLighthelper)
 
 
 // Điều chỉnh các thuộc tính của OrbitControls để đạt được hiệu ứng mong muốn
-controls.enableDamping = true; // Cho phép làm mượt chuyển động
+//controls.enableDamping = true; // Cho phép làm mượt chuyển động
 controls.dampingFactor = 0.05; // Điều chỉnh độ mượt
 controls.enableZoom = true; // Cho phép phóng to/thu nhỏ
-controls.minDistance = 40; // Khoảng cách tối thiểu khi zoom
-controls.maxDistance = 40; // Khoảng cách tối đa khi zoom
-controls.maxPolarAngle = Math.PI / 2; // Giới hạn góc nhìn xuống dưới
+controls.minDistance = 0; // Khoảng cách tối thiểu khi zoom
+controls.maxDistance = 80; // Khoảng cách tối đa khi zoom
+controls.maxPolarAngle = Math.PI * 2; // Giới hạn góc nhìn xuống dưới
+
+//control keys
+const keysPressed = {}
+const KeyDisplayQueue = {
+  down(key) {
+    console.log(`Key down: ${key}`);
+    // Thêm logic nếu cần thiết
+  },
+  up(key) {
+    console.log(`Key up: ${key}`);
+    // Thêm logic nếu cần thiết
+  }
+}
+
+// jump-----------------------------
+let isJumping = false;
+let jumpHeight = 30; // Chiều cao nhảy
+let originalPosition = cube.position.clone(); // Vị trí ban đầu
+
+
+
+
+const canvas = renderer.domElement;
+// Hàm yêu cầu pointer lock
+function requestPointerLock() {
+  canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
+  canvas.requestPointerLock();
+}
+
+// Hàm thoát khỏi pointer lock
+function exitPointerLock() {
+  document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+  document.exitPointerLock();
+}
+
+
+
+
+// pointer lock
+
+
+
+
+// Xử lý sự kiện khi pointer lock được yêu cầu
+document.addEventListener('pointerlockchange', () => {
+  if (document.pointerLockElement === canvas) {
+    console.log('Pointer lock is enabled');
+  } else {
+    console.log('Pointer lock is disabled');
+  }
+});
+
+
+// Xử lý sự kiện khi nhấn nút chuột phải hoặc một phím để yêu cầu pointer lock
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Shift') { // Nút chuột trái
+    requestPointerLock();
+  }
+}, false);
+
+// Xử lý sự kiện để thoát pointer lock khi nhấn phím Escape
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    exitPointerLock();
+  }
+}, false);
+
+
+
+document.addEventListener('keydown', (event) => {
+  KeyDisplayQueue.down(event.key);
+
+  if (event.shiftKey) {
+    // Logic khi nhấn Shift
+  } else {
+    keysPressed[event.key.toLowerCase()] = true;
+  }
+}, false);
+
+document.addEventListener('keyup', (event) => {
+  KeyDisplayQueue.up(event.key);
+  keysPressed[event.key.toLowerCase()] = false;
+
+
+}, false);
+
+
+
+
+
+
+
+// jump
+
+let movein = 2;
+
 
 function animate() {
-
-  
   requestAnimationFrame(animate);
+
+  // OrbitControls 
+  
+      movein += 2;
+      
   controls.target.copy(cube.position);
-  // Cập nhật controls (giúp camera phản ứng với sự di chuyển của chuột)
   controls.update();
 
   // Render scene
   renderer.render(scene, camera);
-  const distance = camera.position.distanceTo(cube.position);
-  console.log('Khoảng cách từ camera đến cube:', distance);
-  // Xoay cube
+
+
+
+  //camera.lookAt(2, 2 , movein)
+
+
+
+
+  
+
+
+
+
+
+
   cube.rotation.x += 0.03;
   cube.rotation.y += 0.03;
   cube.rotation.z += 0.03;
 
-  // Cập nhật vị trí Sphere
+
+  // camera.position.x = cube.position.x + radius * Math.cos(angle);
+  // camera.position.z = cube.position.z + radius * Math.sin(angle);
+  // camera.position.y = cube.position.y + 50; // Tùy chỉnh cao độ của camera
+
+  const direction = new THREE.Vector3();
+  camera.getWorldDirection(direction);
+
+  const moveDistance = 2.5;
+
+  const moveVector = new THREE.Vector3(direction.x, 0, direction.z).normalize();
+
+  if (keysPressed['w']) {
+    cube.position.add(moveVector.multiplyScalar(moveDistance));
+    camera.position.add(moveVector.multiplyScalar(moveDistance / 2.5));
+  }
+  if (keysPressed['s']) {
+    cube.position.add(moveVector.multiplyScalar(-moveDistance));
+    camera.position.add(moveVector.multiplyScalar(moveDistance / 2.5));
+  }
+
+  if (keysPressed['a']) {
+    //right
+    const left = new THREE.Vector3().crossVectors(camera.up, direction).normalize();
+    cube.position.add(left.multiplyScalar(moveDistance));
+    camera.position.add(left.multiplyScalar(moveDistance / 2.5));
+  }
+  
+   
+  if (keysPressed['d']) {
+    // left
+    const right = new THREE.Vector3().crossVectors(direction, camera.up).normalize();
+    cube.position.add(right.multiplyScalar(moveDistance));
+    camera.position.add(right.multiplyScalar(moveDistance / 2.5));
+  }
+
+
+// jump-------------
+
+const jumpDuration = 500; // Thời gian nhảy (2 giây)
+
+if (keysPressed[' '] && !cube.userData.jumpStarted) {
+  // Bắt đầu nhảy khi phím Space được nhấn và nếu chưa bắt đầu nhảy
+  cube.userData.jumpStarted = true;
+  cube.userData.jumpStartTime = Date.now();
+}
+
+if (cube.userData.jumpStarted) {
+  const currentTime = Date.now();
+  const elapsedTime = currentTime - cube.userData.jumpStartTime;
+
+  if (elapsedTime < jumpDuration) {
+    if (elapsedTime < jumpDuration / 2) {
+      // Nhảy lên
+      const previousY = cube.position.y;
+      cube.position.y = originalPosition.y + (jumpHeight * (elapsedTime / (jumpDuration / 2)));
+      camera.position.y += Math.abs(previousY - cube.position.y);
+    } else {
+      // Rơi xuống
+      const previousY = cube.position.y;
+      cube.position.y = originalPosition.y + jumpHeight - (jumpHeight * ((elapsedTime - jumpDuration / 2) / (jumpDuration / 2)));
+      camera.position.y -= Math.abs(previousY - cube.position.y);
+    }
+  } else {
+    // Kết thúc nhảy, đặt lại vị trí ban đầu
+    cube.position.y = originalPosition.y;
+    cube.userData.jumpStarted = false;
+  }
+}
+
+
+
+
+
+
+
+
+
+  const distance = cube.position.distanceTo(camera.position);
+  console.log('Distance between cube and camera:', distance);
+
+  // Cập nhật vị trí Sphere (chỉ để ví dụ)
   step += option.speed;
   Sphere.position.y = 20 * Math.abs(Math.sin(step));
   Sphere.position.x = 20 * (Math.cos(step));
@@ -166,6 +358,8 @@ function animate() {
   spotLight.penumbra = option.penumbra;
   spotLight.intensity = option.intensity;
   spotLighthelper.update();
+
+ 
 }
 
 // Đặt vị trí ban đầu của camera
@@ -173,6 +367,59 @@ camera.position.set(-60, 60, 60);
 
 // Bắt đầu animation loop
 animate();
+
+
+
+
+
+
+
+let yaw = 0; // Góc quay theo trục Y (trái/phải)
+let pitch = 0; // Góc quay theo trục X (lên/xuống)
+const yawSpeed = 0.005; // Tốc độ quay theo trục Y
+const pitchSpeed = 0.005; // Tốc độ quay theo trục X
+//const radius = 50;
+
+document.addEventListener('mousemove', (event) => {
+  if (document.pointerLockElement === canvas) {
+    const movementX = event.movementX || event.mozMovementX || 0;
+    const movementY = event.movementY || event.mozMovementY || 0;
+    //cube.position.update();
+    // Cập nhật góc quay của camera
+    yaw -= movementX * yawSpeed; // Di chuyển trái/phải
+    pitch -= movementY * pitchSpeed; // Di chuyển lên/xuống
+
+    // Giới hạn góc nhìn lên/xuống để tránh lật ngược camera
+    pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+
+    const length = Math.sqrt(Math.pow(cube.position.x - camera.position.x , 2) + Math.pow(cube.position.y - camera.position.y , 2) + Math.pow(cube.position.z - camera.position.z , 2))
+
+    // Tính toán vị trí mới của camera
+    const x =  cube.position.x + length * Math.cos(pitch) * Math.sin(yaw);
+    const y = cube.position.y - length * Math.sin(pitch);
+    const z = cube.position.z + length * Math.cos(pitch) * Math.cos(yaw);
+
+    camera.position.set(x, y, z);
+
+    // Camera luôn nhìn về đối tượng (cube)
+    //camera.lookAt(cube.position);
+  }
+}, false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Hàm cập nhật khi cửa sổ thay đổi kích thước
 window.addEventListener("resize", () => {
