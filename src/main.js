@@ -5,6 +5,7 @@ import { cube, Sphere, plane, gridHelper, ambientLight } from "./player";
 import * as dat from "dat.gui";
 import { Sequence } from "three/examples/jsm/libs/tween.module.js";
 import night from './mp4/night.mp4'
+import sun from './mp4/SunSurface.mp4'
 
 //Scene
 const scene = new THREE.Scene();
@@ -16,22 +17,48 @@ document.body.appendChild(renderer.domElement);
 renderer.shadowMap.enabled = true;
 
 // pic or mp4 for scene
+//night
 const video = document.createElement('video');
 video.src = night;
 video.loop = true;
-video.muted = true; // Đảm bảo video không phát âm thanh
+video.muted = true; 
 video.play();
+
+//sun
+const Sunvideo = document.createElement('video');
+Sunvideo.src = sun;
+Sunvideo.loop = true;
+Sunvideo.muted = true; 
+Sunvideo.play();
+
 
 
 const videoTexture = new THREE.VideoTexture(video);
-//scene.background = videoTexture;
+const SunVideoTexture = new THREE.VideoTexture(Sunvideo);
 
+//scene.background = videoTexture;
+//night
 const geometry = new THREE.SphereGeometry(100000, 60, 40);
 geometry.scale(-1, 1, 1); // Đảo ngược mặt ngoài của hình cầu
-
-const material = new THREE.MeshBasicMaterial({ map: videoTexture });
+const material = new THREE.MeshBasicMaterial({
+   map: videoTexture,
+  emissive: new THREE.Color(0xFFFF00), // Màu phát sáng (vàng)
+  emissiveIntensity: 50
+   });
 const sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
+const light = new THREE.PointLight(0xFFFF00, 100, 10000); // Ánh sáng điểm màu vàng
+light.position.set(-50, 50, 50);
+scene.add(light);
+
+
+//sun
+const SunGeometry = new THREE.SphereGeometry(30);
+SunGeometry.scale(-1, 1, 1);
+const SunMaterial = new THREE.MeshBasicMaterial({map: SunVideoTexture})
+const Sun = new THREE.Mesh(SunGeometry, SunMaterial);
+Sun.position.set(-100,100,100);
+scene.add(Sun)
 
 //Camera
 const camera = new THREE.PerspectiveCamera(
@@ -78,9 +105,9 @@ const dLightShadowHepler = new THREE.CameraHelper(directionalLight.shadow.camera
 scene.add(dLightShadowHepler);
 
 //spot light
-const spotLight = new THREE.SpotLight(0xFFFFFF, 100, 100, 1000, 0,1)
+const spotLight = new THREE.SpotLight(0xFFFFFF, 100, 10000, 1000, 0,1)
 scene.add(spotLight)
-spotLight.position.set(0, 50 ,0)
+spotLight.position.set(-100,100,100)
 spotLight.castShadow = true;
 
 const spotLighthelper = new THREE.SpotLightHelper(spotLight)
@@ -151,8 +178,8 @@ Sphere.material.wireframe = e;
 gui.add(option, 'speed', 0, 5);
 
 gui.add(option, 'angle', 0, 3.14);
-gui.add(option, 'penumbra', 0, 1);
-gui.add(option, 'intensity', 0, 200);
+gui.add(option, 'penumbra', 0, 0.1);
+gui.add(option, 'intensity', 0, 2000);
 
 //export
 export { camera, renderer, scene, animate };

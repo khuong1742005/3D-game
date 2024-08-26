@@ -33,6 +33,10 @@ const SphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 , wirefr
 const Sphere = new THREE.Mesh(SphereGeometry, SphereMaterial);
 Sphere.position.set(20, 30, 20);
 
+
+
+
+
 // create a ambienlight
 const ambientLight = new THREE.AmbientLight(0x333333)
 
