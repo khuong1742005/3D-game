@@ -84,7 +84,10 @@ plane.receiveShadow = true;
 scene.add(Sphere);
 Sphere.castShadow = true;
 
+
+
 scene.add(cube);
+cube.castShadow = true;
 
 scene.add(ambientLight);
 
@@ -126,28 +129,49 @@ scene.add(spotLighthelper)
    
 
 // Loop
-function animate() {
-  requestAnimationFrame(animate);
 
-  // Cập nhật controls
+
+// Điều chỉnh các thuộc tính của OrbitControls để đạt được hiệu ứng mong muốn
+controls.enableDamping = true; // Cho phép làm mượt chuyển động
+controls.dampingFactor = 0.05; // Điều chỉnh độ mượt
+controls.enableZoom = true; // Cho phép phóng to/thu nhỏ
+controls.minDistance = 40; // Khoảng cách tối thiểu khi zoom
+controls.maxDistance = 40; // Khoảng cách tối đa khi zoom
+controls.maxPolarAngle = Math.PI / 2; // Giới hạn góc nhìn xuống dưới
+
+function animate() {
+
+  
+  requestAnimationFrame(animate);
+  controls.target.copy(cube.position);
+  // Cập nhật controls (giúp camera phản ứng với sự di chuyển của chuột)
   controls.update();
 
   // Render scene
   renderer.render(scene, camera);
-
+  const distance = camera.position.distanceTo(cube.position);
+  console.log('Khoảng cách từ camera đến cube:', distance);
+  // Xoay cube
   cube.rotation.x += 0.03;
   cube.rotation.y += 0.03;
   cube.rotation.z += 0.03;
 
+  // Cập nhật vị trí Sphere
   step += option.speed;
   Sphere.position.y = 20 * Math.abs(Math.sin(step));
   Sphere.position.x = 20 * (Math.cos(step));
 
+  // Cập nhật các thuộc tính spotLight
   spotLight.angle = option.angle;
   spotLight.penumbra = option.penumbra;
   spotLight.intensity = option.intensity;
   spotLighthelper.update();
 }
+
+// Đặt vị trí ban đầu của camera
+camera.position.set(-60, 60, 60);
+
+// Bắt đầu animation loop
 animate();
 
 // Hàm cập nhật khi cửa sổ thay đổi kích thước
@@ -159,8 +183,8 @@ window.addEventListener("resize", () => {
 
 // Hàm camera
 
-camera.lookAt(0, 10, 0);
-camera.position.set(-60, 60, 60);
+
+
 
 // gui
 const gui = new dat.GUI()

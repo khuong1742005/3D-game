@@ -6,7 +6,7 @@ import * as THREE from 'three';
 const gridHelper = new THREE.GridHelper(100, 10, 0x00ff00, 0x444444);
 
 // add a plane
-const Pgeometry = new THREE.PlaneGeometry(100, 100);
+const Pgeometry = new THREE.PlaneGeometry(400, 400);
 const Pmaterial = new THREE.MeshStandardMaterial({
   color: 0xffffff,
   side: THREE.DoubleSide,
@@ -19,7 +19,7 @@ plane.rotation.x = Math.PI * -0.5;
 
 // cube
 const geometry = new THREE.BoxGeometry();
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geometry, material);
 
 cube.position.set(0, 20, 0)
