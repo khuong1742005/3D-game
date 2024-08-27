@@ -103,6 +103,6 @@ const ambientLight = new THREE.AmbientLight(0x333333)
 
 // });
 
-cube.scale.set(5, 5, 5);   //size of cube
+cube.scale.set(15, 5, 5);   //size of cube
 //scene.add(cube)
 export{cube, Sphere, plane, gridHelper, ambientLight}

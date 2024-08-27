@@ -1,4 +1,3 @@
-// Import file
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { cube, Sphere, plane, gridHelper, ambientLight } from "./player";
@@ -144,18 +143,18 @@ controls.maxPolarAngle = Math.PI * 2; // Giới hạn góc nhìn xuống dưới
 const keysPressed = {}
 const KeyDisplayQueue = {
   down(key) {
-    console.log(`Key down: ${key}`);
+   // console.log(`Key down: ${key}`);
     // Thêm logic nếu cần thiết
   },
   up(key) {
-    console.log(`Key up: ${key}`);
+    //console.log(`Key up: ${key}`);
     // Thêm logic nếu cần thiết
   }
 }
 
 // jump-----------------------------
-let isJumping = false;
-let jumpHeight = 30; // Chiều cao nhảy
+// let isJumping = false;
+// let jumpHeight = 30; // Chiều cao nhảy
 let originalPosition = cube.position.clone(); // Vị trí ban đầu
 
 
@@ -226,7 +225,20 @@ document.addEventListener('keyup', (event) => {
 }, false);
 
 
+const jumpHeight = 30; // Chiều cao nhảy
+const jumpDuration = 500; // Thời gian nhảy (0.5 giây)
+let jumpStartTime = null;
+let isJumping = false;
+let velocity = 0;
+const gravity = 0.98;
 
+document.addEventListener('keydown', (event) => {
+  if (event.code === 'Space' && !isJumping) {
+    isJumping = true;
+    jumpStartTime = performance.now();
+    velocity = Math.sqrt(2 * gravity * jumpHeight);
+  }
+});
 
 
 
@@ -237,6 +249,8 @@ let movein = 2;
 
 
 function animate() {
+
+  
   requestAnimationFrame(animate);
 
   // OrbitControls 
@@ -254,7 +268,8 @@ function animate() {
   //camera.lookAt(2, 2 , movein)
 
 
-
+  const distance = cube.position.distanceTo(camera.position);
+  //console.log('Distance between cube and camera:', distance);
 
   
 
@@ -262,10 +277,15 @@ function animate() {
 
 
 
-
-  cube.rotation.x += 0.03;
-  cube.rotation.y += 0.03;
-  cube.rotation.z += 0.03;
+  // góc quay Euler không bị giới hạn bởi biên độ
+  const cameraQuaternion = new THREE.Quaternion().setFromEuler(camera.rotation);
+  
+  // Lấy góc quay y từ quaternion của camera
+  const cameraEuler = new THREE.Euler().setFromQuaternion(cameraQuaternion, 'YXZ');
+  // cube.rotation.y = cameraEuler.y;
+  //cube.rotation.z = camera.rotation.z;
+   console.log(cube.rotation.y + " - " + cameraEuler.y)
+  // cube.rotation.z += 0.03;
 
 
   // camera.position.x = cube.position.x + radius * Math.cos(angle);
@@ -282,10 +302,35 @@ function animate() {
   if (keysPressed['w']) {
     cube.position.add(moveVector.multiplyScalar(moveDistance));
     camera.position.add(moveVector.multiplyScalar(moveDistance / 2.5));
+    
+     cube.rotation.y %= Math.PI;
+     //else cube.rotation.y = -(cube.rotation.y)%Math.PI;
+      if (cameraEuler.y > 0) {
+              if (cube.rotation.y > cameraEuler.y){
+                cube.rotation.y -= cameraEuler.y /5;
+              }
+              
+              if (cube.rotation.y < cameraEuler.y){
+                cube.rotation.y += cameraEuler.y /5;
+              }
+      } 
+      if (cameraEuler.y < 0)
+      {
+       // cube.rotation.y=-cube.rotation.y;
+              if (cube.rotation.y > cameraEuler.y){
+                cube.rotation.y += cameraEuler.y /5;
+              }
+              
+              if (cube.rotation.y < cameraEuler.y){
+                cube.rotation.y -= cameraEuler.y /5;
+              }
+      }
+    
   }
   if (keysPressed['s']) {
     cube.position.add(moveVector.multiplyScalar(-moveDistance));
     camera.position.add(moveVector.multiplyScalar(moveDistance / 2.5));
+    cube.rotation.y -=Math.PI/90;
   }
 
   if (keysPressed['a']) {
@@ -293,6 +338,7 @@ function animate() {
     const left = new THREE.Vector3().crossVectors(camera.up, direction).normalize();
     cube.position.add(left.multiplyScalar(moveDistance));
     camera.position.add(left.multiplyScalar(moveDistance / 2.5));
+    cube.rotation.y += Math.PI/90;
   }
   
    
@@ -301,41 +347,31 @@ function animate() {
     const right = new THREE.Vector3().crossVectors(direction, camera.up).normalize();
     cube.position.add(right.multiplyScalar(moveDistance));
     camera.position.add(right.multiplyScalar(moveDistance / 2.5));
+    cube.rotation.y -=  Math.PI/90;
   }
 
 
 // jump-------------
 
-const jumpDuration = 500; // Thời gian nhảy (2 giây)
+const initialCameraDistance = new THREE.Vector3().copy(camera.position).sub(cube.position);
 
-if (keysPressed[' '] && !cube.userData.jumpStarted) {
-  // Bắt đầu nhảy khi phím Space được nhấn và nếu chưa bắt đầu nhảy
-  cube.userData.jumpStarted = true;
-  cube.userData.jumpStartTime = Date.now();
-}
 
-if (cube.userData.jumpStarted) {
-  const currentTime = Date.now();
-  const elapsedTime = currentTime - cube.userData.jumpStartTime;
+if (isJumping) {
+  const elapsedTime = performance.now() - jumpStartTime;
+  const time = elapsedTime / 50; // Điều chỉnh tốc độ nhảy nếu cần
+  const jumpProgress = velocity * time - 0.5 * gravity * time * time;
 
-  if (elapsedTime < jumpDuration) {
-    if (elapsedTime < jumpDuration / 2) {
-      // Nhảy lên
-      const previousY = cube.position.y;
-      cube.position.y = originalPosition.y + (jumpHeight * (elapsedTime / (jumpDuration / 2)));
-      camera.position.y += Math.abs(previousY - cube.position.y);
-    } else {
-      // Rơi xuống
-      const previousY = cube.position.y;
-      cube.position.y = originalPosition.y + jumpHeight - (jumpHeight * ((elapsedTime - jumpDuration / 2) / (jumpDuration / 2)));
-      camera.position.y -= Math.abs(previousY - cube.position.y);
-    }
-  } else {
-    // Kết thúc nhảy, đặt lại vị trí ban đầu
-    cube.position.y = originalPosition.y;
-    cube.userData.jumpStarted = false;
+  // Cập nhật vị trí của cube
+  cube.position.y = originalPosition.y + jumpProgress;
+
+  // Cập nhật vị trí của camera theo khoảng cách cố định
+  const targetCameraPosition = new THREE.Vector3().copy(initialCameraDistance);
+  camera.position.copy(cube.position).add(targetCameraPosition)
+  if (jumpProgress <= 0) {
+    isJumping = false;
   }
-}
+
+} 
 
 
 
@@ -345,8 +381,7 @@ if (cube.userData.jumpStarted) {
 
 
 
-  const distance = cube.position.distanceTo(camera.position);
-  console.log('Distance between cube and camera:', distance);
+ 
 
   // Cập nhật vị trí Sphere (chỉ để ví dụ)
   step += option.speed;
@@ -457,4 +492,3 @@ export { camera, renderer, scene, animate };
 
 //remđerer
 renderer.render(scene, camera);
-
