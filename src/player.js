@@ -9,7 +9,7 @@ const gridHelper = new THREE.GridHelper(100, 10, 0x00ff00, 0x444444);
 // add a plane
 const Pgeometry = new THREE.PlaneGeometry(4000, 4000);
 const Pmaterial = new THREE.MeshStandardMaterial({
-  color: 0xa4a4a4,
+  color: 0x7c6161,
   side: THREE.DoubleSide,
 });
 
