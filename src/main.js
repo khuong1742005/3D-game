@@ -53,11 +53,11 @@ scene.add(light);
 
 
 //sun
-const SunGeometry = new THREE.SphereGeometry(30);
+const SunGeometry = new THREE.SphereGeometry(40);
 SunGeometry.scale(-1, 1, 1);
 const SunMaterial = new THREE.MeshBasicMaterial({map: SunVideoTexture})
 const Sun = new THREE.Mesh(SunGeometry, SunMaterial);
-Sun.position.set(-100,100,100);
+Sun.position.set(-1000, 500, 1000);
 scene.add(Sun)
 
 //Camera
@@ -94,45 +94,67 @@ scene.add(ambientLight);
 //directional light
 const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1.5);
 scene.add(directionalLight)
-directionalLight.position.set(-30,20,30)
+
+directionalLight.position.set(-200,200,200)
 directionalLight.castShadow = true;
-directionalLight.shadow.camera.bottom = -14
-directionalLight.shadow.camera.top = 24
-directionalLight.shadow.camera.left = -14
-directionalLight.shadow.camera.right = 34
+directionalLight.shadow.camera.bottom = -200
+directionalLight.shadow.camera.top = 200
+directionalLight.shadow.camera.left = -200
+directionalLight.shadow.camera.right = 200
+directionalLight.intensity = 3
+directionalLight.shadow.mapSize.width = 2048;
+directionalLight.shadow.mapSize.height = 2048;
 
-const dLightHelper = new THREE.DirectionalLightHelper(directionalLight, 0.8);
-scene.add(dLightHelper);
 
-const dLightShadowHepler = new THREE.CameraHelper(directionalLight.shadow.camera);
-scene.add(dLightShadowHepler);
+//directionalLight.target.add(0,-10,0)
+//directionalLight.target(0,1000,-10);
+// const dLightHelper = new THREE.DirectionalLightHelper(directionalLight, 0.8);
+// scene.add(dLightHelper);
+
+// const dLightShadowHepler = new THREE.CameraHelper(directionalLight.shadow.camera);
+// scene.add(dLightShadowHepler);
 
 //spot light
-const spotLight = new THREE.SpotLight(0xFFFFFF, 100, 10000, 1000, 0,1)
-scene.add(spotLight)
-spotLight.position.set(-100,100,100)
-spotLight.castShadow = true;
+// const spotLight = new THREE.SpotLight(0xffffff);
+// scene.add(spotLight);
+// spotLight.position.set(-1500, 500, 1500);
 
-const spotLighthelper = new THREE.SpotLightHelper(spotLight)
-scene.add(spotLighthelper)
+// spotLight.angle = 0.99; // Góc hẹp hơn để tập trung ánh sáng
+// spotLight.intensity = 2000; // Cường độ sáng hợp lý
+// spotLight.penumbra = 0.2; // Làm mềm cạnh bóng một chút
+// spotLight.decay = 0.7; // Giảm cường độ ánh sáng theo khoảng cách thực tế hơn
+// spotLight.castShadow = true;
+
+// spotLight.shadow.mapSize.width = 8048; // Tăng độ phân giải bản đồ bóng
+// spotLight.shadow.mapSize.height = 8048;
+
+// spotLight.shadow.camera.near = 200; // Điều chỉnh cho phù hợp với vị trí đèn
+// spotLight.shadow.camera.far = 4600; // Đảm bảo vùng chiếu bóng đủ rộng
+// spotLight.shadow.camera.left = -500;
+// spotLight.shadow.camera.right = 500;
+// spotLight.shadow.camera.top = 500;
+// spotLight.shadow.camera.bottom = -500;
+//  //spotLight.shadow.bias = -0.001;
+//  //spotLight.distance = 400
+// const sLighthelper = new THREE.SpotLightHelper(spotLight)
+// scene.add(sLighthelper)
+
+
 //option for gui-----------------------------------------------------------
-  const option = {
+ const option = {
     sphereColor: '#ffea00',
     wireframe: false,
     speed: 0.03,
-
-    angle: 1000,
-    penumbra: 0.3,
-    intensity: 100,
   };
     let step = 0;
    
 
-// Loop
+
 
 
 // Điều chỉnh các thuộc tính của OrbitControls để đạt được hiệu ứng mong muốn
-//controls.enableDamping = true; // Cho phép làm mượt chuyển động
+
+//controls.enableDamping = true; // Cho phép làm mượt chuyển động // góc nhìn kịch tính
 controls.dampingFactor = 0.05; // Điều chỉnh độ mượt
 controls.enableZoom = true; // Cho phép phóng to/thu nhỏ
 controls.minDistance = 0; // Khoảng cách tối thiểu khi zoom
@@ -200,7 +222,7 @@ document.addEventListener('keydown', (event) => {
 
 // Xử lý sự kiện để thoát pointer lock khi nhấn phím Escape
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
+  if (event.key === 'Esc') {
     exitPointerLock();
   }
 }, false);
@@ -249,13 +271,16 @@ let movein = 2;
 
 
 function animate() {
+  directionalLight.target.position.copy(cube.position);
+  directionalLight.position.set(cube.position.x, cube.position.y+70, cube.position.z+70)
+  scene.add(directionalLight.target);
 
   
   requestAnimationFrame(animate);
 
   // OrbitControls 
   
-      movein += 2;
+  movein += 2;
       
   controls.target.copy(cube.position);
   controls.update();
@@ -281,10 +306,14 @@ function animate() {
   const cameraQuaternion = new THREE.Quaternion().setFromEuler(camera.rotation);
   
   // Lấy góc quay y từ quaternion của camera
+
   const cameraEuler = new THREE.Euler().setFromQuaternion(cameraQuaternion, 'YXZ');
-  // cube.rotation.y = cameraEuler.y;
+  if (document.pointerLockElement === canvas) cube.rotation.y = cameraEuler.y;
+
+
+
   //cube.rotation.z = camera.rotation.z;
-   console.log(cube.rotation.y + " - " + cameraEuler.y)
+  // console.log(cube.rotation.y + " - " + cameraEuler.y)
   // cube.rotation.z += 0.03;
 
 
@@ -299,56 +328,44 @@ function animate() {
 
   const moveVector = new THREE.Vector3(direction.x, 0, direction.z).normalize();
 
-  if (keysPressed['w']) {
+
+  function lerpRotation(current, target, alpha) {
+    let delta = target - current;
+    delta = (delta + Math.PI) % (2 * Math.PI) - Math.PI;
+    let result = current + delta * alpha;
+    return (result + Math.PI) % (2 * Math.PI) - Math.PI;
+}
+
+if (keysPressed['w']) {
     cube.position.add(moveVector.multiplyScalar(moveDistance));
     camera.position.add(moveVector.multiplyScalar(moveDistance / 2.5));
-    
-     cube.rotation.y %= Math.PI;
-     //else cube.rotation.y = -(cube.rotation.y)%Math.PI;
-      if (cameraEuler.y > 0) {
-              if (cube.rotation.y > cameraEuler.y){
-                cube.rotation.y -= cameraEuler.y /5;
-              }
-              
-              if (cube.rotation.y < cameraEuler.y){
-                cube.rotation.y += cameraEuler.y /5;
-              }
-      } 
-      if (cameraEuler.y < 0)
-      {
-       // cube.rotation.y=-cube.rotation.y;
-              if (cube.rotation.y > cameraEuler.y){
-                cube.rotation.y += cameraEuler.y /5;
-              }
-              
-              if (cube.rotation.y < cameraEuler.y){
-                cube.rotation.y -= cameraEuler.y /5;
-              }
-      }
-    
-  }
-  if (keysPressed['s']) {
+    if (document.pointerLockElement !== canvas)
+    cube.rotation.y = lerpRotation(cube.rotation.y, cameraEuler.y, 0.15);
+}
+
+if (keysPressed['s']) {
     cube.position.add(moveVector.multiplyScalar(-moveDistance));
     camera.position.add(moveVector.multiplyScalar(moveDistance / 2.5));
-    cube.rotation.y -=Math.PI/90;
-  }
+    if (document.pointerLockElement !== canvas)
+    cube.rotation.y = lerpRotation(cube.rotation.y, cameraEuler.y + Math.PI, 0.15);
+}
 
-  if (keysPressed['a']) {
-    //right
+if (keysPressed['a']) {
     const left = new THREE.Vector3().crossVectors(camera.up, direction).normalize();
     cube.position.add(left.multiplyScalar(moveDistance));
     camera.position.add(left.multiplyScalar(moveDistance / 2.5));
-    cube.rotation.y += Math.PI/90;
-  }
-  
-   
-  if (keysPressed['d']) {
-    // left
+    if (document.pointerLockElement !== canvas)
+    cube.rotation.y = lerpRotation(cube.rotation.y, cameraEuler.y + Math.PI / 2, 0.15);
+}
+
+if (keysPressed['d']) {
     const right = new THREE.Vector3().crossVectors(direction, camera.up).normalize();
     cube.position.add(right.multiplyScalar(moveDistance));
     camera.position.add(right.multiplyScalar(moveDistance / 2.5));
-    cube.rotation.y -=  Math.PI/90;
-  }
+    if (document.pointerLockElement !== canvas)
+    cube.rotation.y = lerpRotation(cube.rotation.y, cameraEuler.y - Math.PI / 2, 0.15);
+}
+
 
 
 // jump-------------
@@ -375,25 +392,19 @@ if (isJumping) {
 
 
 
-
-
-
-
-
-
- 
-
   // Cập nhật vị trí Sphere (chỉ để ví dụ)
   step += option.speed;
   Sphere.position.y = 20 * Math.abs(Math.sin(step));
   Sphere.position.x = 20 * (Math.cos(step));
 
   // Cập nhật các thuộc tính spotLight
-  spotLight.angle = option.angle;
-  spotLight.penumbra = option.penumbra;
-  spotLight.intensity = option.intensity;
-  spotLighthelper.update();
-
+  // spotLight.angle = option.angle;
+  // spotLight.penumbra = option.penumbra;
+  // spotLight.intensity = option.intensity;
+  // spotLighthelper.update();
+  
+  //console.log(cube.position)
+  //matrixAutoUpdate = true
  
 }
 
@@ -407,7 +418,7 @@ animate();
 
 
 
-
+//Sentivity của góc nhìn thứ 3
 
 let yaw = 0; // Góc quay theo trục Y (trái/phải)
 let pitch = 0; // Góc quay theo trục X (lên/xuống)
@@ -419,7 +430,7 @@ document.addEventListener('mousemove', (event) => {
   if (document.pointerLockElement === canvas) {
     const movementX = event.movementX || event.mozMovementX || 0;
     const movementY = event.movementY || event.mozMovementY || 0;
-    //cube.position.update();
+
     // Cập nhật góc quay của camera
     yaw -= movementX * yawSpeed; // Di chuyển trái/phải
     pitch -= movementY * pitchSpeed; // Di chuyển lên/xuống
@@ -436,19 +447,9 @@ document.addEventListener('mousemove', (event) => {
 
     camera.position.set(x, y, z);
 
-    // Camera luôn nhìn về đối tượng (cube)
-    //camera.lookAt(cube.position);
+
   }
 }, false);
-
-
-
-
-
-
-
-
-
 
 
 
@@ -483,9 +484,9 @@ Sphere.material.wireframe = e;
 
 gui.add(option, 'speed', 0, 5);
 
-gui.add(option, 'angle', 0, 3.14);
-gui.add(option, 'penumbra', 0, 0.1);
-gui.add(option, 'intensity', 0, 2000);
+// gui.add(option, 'angle', 0, 3.14);
+// gui.add(option, 'penumbra', 0, 0.1);
+// gui.add(option, 'intensity', 0, 2000);
 
 //export
 export { camera, renderer, scene, animate };

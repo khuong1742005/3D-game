@@ -6,7 +6,7 @@ import * as THREE from 'three';
 const gridHelper = new THREE.GridHelper(100, 10, 0x00ff00, 0x444444);
 
 // add a plane
-const Pgeometry = new THREE.PlaneGeometry(400, 400);
+const Pgeometry = new THREE.PlaneGeometry(4000, 4000);
 const Pmaterial = new THREE.MeshStandardMaterial({
   color: 0xffffff,
   side: THREE.DoubleSide,
