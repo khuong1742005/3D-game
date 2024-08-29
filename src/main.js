@@ -1,17 +1,18 @@
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { cube, Sphere, plane, gridHelper, ambientLight } from "./player";
-import * as dat from "dat.gui";
-import { Sequence } from "three/examples/jsm/libs/tween.module.js";
-import night from './mp4/night.mp4'
-import sun from './mp4/SunSurface.mp4'
-import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+ import { cube, Sphere, plane, gridHelper, ambientLight } from './player.js';
+// import night from './mp4/night.mp4';
+// import sun from './mp4/SunSurface.mp4';
+import * as dat from 'https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.module.js';
+
 
 //Scene
 const scene = new THREE.Scene();
 
 // Renderer
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 renderer.shadowMap.enabled = true;
@@ -19,14 +20,14 @@ renderer.shadowMap.enabled = true;
 // pic or mp4 for scene
 //night
 const video = document.createElement('video');
-video.src = night;
+video.src = '../src/mp4/night.mp4';
 video.loop = true;
 video.muted = true; 
 video.play();
 
 //sun
 const Sunvideo = document.createElement('video');
-Sunvideo.src = sun;
+Sunvideo.src = '../src/mp4/SunSurface.mp4';
 Sunvideo.loop = true;
 Sunvideo.muted = true; 
 Sunvideo.play();
@@ -47,7 +48,8 @@ const material = new THREE.MeshBasicMaterial({
    });
 const sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
-const light = new THREE.PointLight(0xFFFF00, 100, 10000); // Ánh sáng điểm màu vàng
+
+const light = new THREE.PointLight(0x000000, 10, 700); // Ánh sáng điểm màu vàng
 light.position.set(-50, 50, 50);
 scene.add(light);
 
@@ -92,7 +94,7 @@ cube.castShadow = true;
 scene.add(ambientLight);
 
 //directional light
-const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1.5);
+const directionalLight = new THREE.DirectionalLight(0x426a69, 1.5);
 scene.add(directionalLight)
 
 directionalLight.position.set(-200,200,200)
@@ -142,9 +144,10 @@ directionalLight.shadow.mapSize.height = 2048;
 
 //option for gui-----------------------------------------------------------
  const option = {
-    sphereColor: '#ffea00',
+    sphereColor: '#ff0404',
     wireframe: false,
     speed: 0.03,
+
   };
     let step = 0;
    
@@ -482,6 +485,10 @@ gui.add(option, 'wireframe').onChange(function(e){
 Sphere.material.wireframe = e;
 });
 
+gui.add(option, 'wireframe').onChange(function(e){
+  Sphere.material.wireframe = e;
+  });
+
 gui.add(option, 'speed', 0, 5);
 
 // gui.add(option, 'angle', 0, 3.14);
@@ -489,7 +496,7 @@ gui.add(option, 'speed', 0, 5);
 // gui.add(option, 'intensity', 0, 2000);
 
 //export
-export { camera, renderer, scene, animate };
+export { camera, renderer, scene, animate, };
 
 //remđerer
 renderer.render(scene, camera);

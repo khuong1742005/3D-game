@@ -9,17 +9,30 @@
             margin: 0;
             /* padding: 0; */
             overflow: hidden;
+
         }
         .webgl {
             display: none;
         }
                 
         </style>
+
+            <script type="importmap">
+                {
+                "imports": {
+                    "three": "https://cdn.jsdelivr.net/npm/three@v0.149.0/build/three.module.js",
+                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.149.0/examples/jsm/"
+                }
+                }
+            </script>
+
     
 </head>
 
 <body>
-    <h1>hello world!</h1>
+    <h1 style="display: none;">hello world!</h1>
+    <!-- <video id="nightVideo" src="./src/mp4/night.mp4" style="display:none;"></video>
+    <video id="sunVideo" src="./src/mp4/SunSurface.mp4" style="display:none;"></video> -->
     <!-- //<canvas class="webgl"></canvas> -->
     <script type="module" src="./src/player.js"></script>
     <script type="module" src="./src/main.js"></script>

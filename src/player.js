@@ -2,15 +2,17 @@ import * as THREE from 'three';
 
 
 
+
 // Thêm GridHelper vào scene
 const gridHelper = new THREE.GridHelper(100, 10, 0x00ff00, 0x444444);
 
 // add a plane
 const Pgeometry = new THREE.PlaneGeometry(4000, 4000);
 const Pmaterial = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
+  color: 0xa4a4a4,
   side: THREE.DoubleSide,
 });
+
 const plane = new THREE.Mesh(Pgeometry, Pmaterial);
 plane.rotation.x = Math.PI * -0.5;
 
