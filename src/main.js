@@ -146,7 +146,7 @@ directionalLight.shadow.mapSize.height = 2048;
  const option = {
     sphereColor: '#ff0404',
     wireframe: false,
-    speed: 0.03,
+    speed: 3.144,
 
   };
     let step = 0;
