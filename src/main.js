@@ -125,8 +125,6 @@ function animate() {
             }
         }
     });
-    // Move();
-    // updateObjectRotation();
     renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
