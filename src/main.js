@@ -124,6 +124,7 @@ function animate() {
                 arrow.visible = false;
             }
         }
+
     });
     renderer.render(scene, camera);
 }
