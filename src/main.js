@@ -1,9 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
- import { cube, Sphere, plane, gridHelper, ambientLight } from './player.js';
-// import night from './mp4/night.mp4';
-// import sun from './mp4/SunSurface.mp4';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { cube, Sphere, plane, gridHelper, ambientLight } from './player.js';
 import * as dat from 'https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.module.js';
+
+
+
+
 
 
 //Scene
@@ -43,8 +46,8 @@ const geometry = new THREE.SphereGeometry(100000, 60, 40);
 geometry.scale(-1, 1, 1); // Đảo ngược mặt ngoài của hình cầu
 const material = new THREE.MeshBasicMaterial({
    map: videoTexture,
-  emissive: new THREE.Color(0xFFFF00), // Màu phát sáng (vàng)
-  emissiveIntensity: 50
+ // emissive: new THREE.Color(0xFFFF00), // Màu phát sáng (vàng)
+  //emissiveIntensity: 50
    });
 const sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
@@ -70,9 +73,6 @@ const camera = new THREE.PerspectiveCamera(
   1000000
 );
 
-// // Thêm axesHelper vào scene
-// const axesHelper = new THREE.AxesHelper(5);
-// scene.add(axesHelper)
 
 scene.add(gridHelper);
 
@@ -93,8 +93,42 @@ cube.castShadow = true;
 
 scene.add(ambientLight);
 
+const SlingShot = new URL('../src/3D object/SlingShot.glb', import.meta.url) ;
+const assetLoader = new GLTFLoader();
+assetLoader.load(SlingShot.href, function(gltf){
+  const model = gltf.scene;
+  scene.add(model);
+  model.castShadow = true
+  model.scale.set(2,2,2)
+  
+  model.traverse(function(child) {
+    if (child.isMesh) {
+      child.castShadow = true;  
+      child.receiveShadow = true;
+      if (Array.isArray(child.material)) {
+        // Nếu có nhiều vật liệu, ta phải thiết lập wireframe cho từng vật liệu
+        child.material.forEach(material => {
+          material.wireframe = false;
+        });
+      } else {
+        // Nếu chỉ có một vật liệu
+        child.material.wireframe = false;
+      }
+    }
+  });
+
+
+
+}, undefined, function(error) {
+  console.error(error)
+})
+
+
+
+
+
 //directional light
-const directionalLight = new THREE.DirectionalLight(0x426a69, 1.5);
+const directionalLight = new THREE.DirectionalLight(0xfcfcfc, 1.5);
 scene.add(directionalLight)
 
 directionalLight.position.set(-200,200,200)
@@ -103,7 +137,7 @@ directionalLight.shadow.camera.bottom = -200
 directionalLight.shadow.camera.top = 200
 directionalLight.shadow.camera.left = -200
 directionalLight.shadow.camera.right = 200
-directionalLight.intensity = 3
+directionalLight.intensity = 0.6
 directionalLight.shadow.mapSize.width = 2048;
 directionalLight.shadow.mapSize.height = 2048;
 
@@ -146,7 +180,7 @@ directionalLight.shadow.mapSize.height = 2048;
  const option = {
     sphereColor: '#ff0404',
     wireframe: false,
-    speed: 3.144,
+    speed: 0.144,
 
   };
     let step = 0;
@@ -156,7 +190,6 @@ directionalLight.shadow.mapSize.height = 2048;
 
 
 // Điều chỉnh các thuộc tính của OrbitControls để đạt được hiệu ứng mong muốn
-
 //controls.enableDamping = true; // Cho phép làm mượt chuyển động // góc nhìn kịch tính
 controls.dampingFactor = 0.05; // Điều chỉnh độ mượt
 controls.enableZoom = true; // Cho phép phóng to/thu nhỏ
@@ -167,25 +200,19 @@ controls.maxPolarAngle = Math.PI * 2; // Giới hạn góc nhìn xuống dưới
 //control keys
 const keysPressed = {}
 const KeyDisplayQueue = {
-  down(key) {
-   // console.log(`Key down: ${key}`);
-    // Thêm logic nếu cần thiết
-  },
-  up(key) {
-    //console.log(`Key up: ${key}`);
-    // Thêm logic nếu cần thiết
-  }
+  down(key) {},
+  up(key) {}
 }
 
-// jump-----------------------------
-// let isJumping = false;
-// let jumpHeight = 30; // Chiều cao nhảy
-let originalPosition = cube.position.clone(); // Vị trí ban đầu
 
-
+let originalPosition = cube.position.clone(); 
 
 
 const canvas = renderer.domElement;
+
+
+
+// pointer lock---------------------------------------------------------------------------------------------------------------------------------------------
 // Hàm yêu cầu pointer lock
 function requestPointerLock() {
   canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
@@ -198,14 +225,6 @@ function exitPointerLock() {
   document.exitPointerLock();
 }
 
-
-
-
-// pointer lock
-
-
-
-
 // Xử lý sự kiện khi pointer lock được yêu cầu
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement === canvas) {
@@ -214,7 +233,6 @@ document.addEventListener('pointerlockchange', () => {
     console.log('Pointer lock is disabled');
   }
 });
-
 
 // Xử lý sự kiện khi nhấn nút chuột phải hoặc một phím để yêu cầu pointer lock
 document.addEventListener('keydown', (event) => {
@@ -230,25 +248,17 @@ document.addEventListener('keydown', (event) => {
   }
 }, false);
 
-
-
 document.addEventListener('keydown', (event) => {
   KeyDisplayQueue.down(event.key);
-
-  if (event.shiftKey) {
-    // Logic khi nhấn Shift
-  } else {
-    keysPressed[event.key.toLowerCase()] = true;
-  }
+  if (!event.shiftKey)  keysPressed[event.key.toLowerCase()] = true;
 }, false);
+
 
 document.addEventListener('keyup', (event) => {
   KeyDisplayQueue.up(event.key);
   keysPressed[event.key.toLowerCase()] = false;
-
-
 }, false);
-
+//---------------------------------------------------------------------------------------------------------------
 
 const jumpHeight = 30; // Chiều cao nhảy
 const jumpDuration = 500; // Thời gian nhảy (0.5 giây)
@@ -257,6 +267,8 @@ let isJumping = false;
 let velocity = 0;
 const gravity = 0.98;
 
+
+// jump-----------------
 document.addEventListener('keydown', (event) => {
   if (event.code === 'Space' && !isJumping) {
     isJumping = true;
@@ -266,9 +278,6 @@ document.addEventListener('keydown', (event) => {
 });
 
 
-
-
-// jump
 
 let movein = 2;
 
@@ -281,27 +290,16 @@ function animate() {
   
   requestAnimationFrame(animate);
 
-  // OrbitControls 
-  
+ 
   movein += 2;
       
   controls.target.copy(cube.position);
   controls.update();
 
-  // Render scene
   renderer.render(scene, camera);
 
 
-
-  //camera.lookAt(2, 2 , movein)
-
-
   const distance = cube.position.distanceTo(camera.position);
-  //console.log('Distance between cube and camera:', distance);
-
-  
-
-
 
 
 
@@ -314,16 +312,6 @@ function animate() {
   if (document.pointerLockElement === canvas) cube.rotation.y = cameraEuler.y;
 
 
-
-  //cube.rotation.z = camera.rotation.z;
-  // console.log(cube.rotation.y + " - " + cameraEuler.y)
-  // cube.rotation.z += 0.03;
-
-
-  // camera.position.x = cube.position.x + radius * Math.cos(angle);
-  // camera.position.z = cube.position.z + radius * Math.sin(angle);
-  // camera.position.y = cube.position.y + 50; // Tùy chỉnh cao độ của camera
-
   const direction = new THREE.Vector3();
   camera.getWorldDirection(direction);
 
@@ -332,6 +320,8 @@ function animate() {
   const moveVector = new THREE.Vector3(direction.x, 0, direction.z).normalize();
 
 
+
+ //movement----------------------------------------------------- 
   function lerpRotation(current, target, alpha) {
     let delta = target - current;
     delta = (delta + Math.PI) % (2 * Math.PI) - Math.PI;
@@ -371,7 +361,7 @@ if (keysPressed['d']) {
 
 
 
-// jump-------------
+// jump---------------------------------------------------
 
 const initialCameraDistance = new THREE.Vector3().copy(camera.position).sub(cube.position);
 
@@ -400,25 +390,15 @@ if (isJumping) {
   Sphere.position.y = 20 * Math.abs(Math.sin(step));
   Sphere.position.x = 20 * (Math.cos(step));
 
-  // Cập nhật các thuộc tính spotLight
-  // spotLight.angle = option.angle;
-  // spotLight.penumbra = option.penumbra;
-  // spotLight.intensity = option.intensity;
-  // spotLighthelper.update();
-  
-  //console.log(cube.position)
-  //matrixAutoUpdate = true
+
  
 }
 
 // Đặt vị trí ban đầu của camera
 camera.position.set(-60, 60, 60);
 
-// Bắt đầu animation loop
+// loop
 animate();
-
-
-
 
 
 //Sentivity của góc nhìn thứ 3
@@ -458,8 +438,6 @@ document.addEventListener('mousemove', (event) => {
 
 
 
-
-
 // Hàm cập nhật khi cửa sổ thay đổi kích thước
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -467,7 +445,7 @@ window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Hàm camera
+
 
 
 
@@ -491,9 +469,7 @@ gui.add(option, 'wireframe').onChange(function(e){
 
 gui.add(option, 'speed', 0, 5);
 
-// gui.add(option, 'angle', 0, 3.14);
-// gui.add(option, 'penumbra', 0, 0.1);
-// gui.add(option, 'intensity', 0, 2000);
+
 
 //export
 export { camera, renderer, scene, animate, };
