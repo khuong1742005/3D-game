@@ -105,15 +105,6 @@ assetLoader.load(SlingShot.href, function(gltf){
     if (child.isMesh) {
       child.castShadow = true;  
       child.receiveShadow = true;
-      if (Array.isArray(child.material)) {
-        // Nếu có nhiều vật liệu, ta phải thiết lập wireframe cho từng vật liệu
-        child.material.forEach(material => {
-          material.wireframe = false;
-        });
-      } else {
-        // Nếu chỉ có một vật liệu
-        child.material.wireframe = false;
-      }
     }
   });
 
