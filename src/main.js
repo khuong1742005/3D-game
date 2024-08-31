@@ -15,6 +15,7 @@ const camera = new THREE.PerspectiveCamera(
     0.1,
     1000);
 camera.position.set(10, 10, 10);
+camera.lookAt(0, 0, 0);
 //scene
 const scene = new THREE.Scene();
 //render
@@ -37,8 +38,8 @@ directionalLight.shadow.camera.top += 20;
 
 // Helper----------------------------------------------------------------
 // Camera helper
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.update();
+// const controls = new OrbitControls(camera, renderer.domElement);
+// controls.update();
 
 // Plane helper
 const planeGeometry = new THREE.PlaneGeometry(100, 100, 32, 32);
@@ -76,18 +77,20 @@ SlingShotLoader.load(SlingShot.href, function (gltf) {
     const model = gltf.scene;
     Sparrow.add(model);
     model.scale.set(0.3, 0.3, 0.3)
-    model.rotation.set(0, 1.5, 0)
+    model.rotation.set(0, -1.5, 0)
 });
-const Day = new URL('../src/assets/Day.glb', import.meta.url);
+
+const Dayy = new URL('../src/assets/Day.glb', import.meta.url);
 const DayLoader = new GLTFLoader();
-DayLoader.load(Day.href, function (gltf) {
+DayLoader.load(Dayy.href, function (gltf) {
     const model = gltf.scene;
     Sparrow.add(model);
     model.scale.set(0.1, 0.2, 0.1)
-    model.position.set(0, -0.5, 0.35)
+    model.position.set(0, -0.5, -0.3)
     model.rotation.set(0, 1.5, 0)
 });
 
+Sparrow.position.set(5, 0, 0)
 
 const createArrow = () => {
     const arrowGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1, 32);
@@ -114,6 +117,35 @@ const shootArrow = () => {
     }
 };
 
+// Xử lý kéo dây
+let isDragging = false; // Kéo?
+let dragStart = { x: 0 }; // Bắt đầu
+let initialBowX = Sparrow.position.x; // Position before drag of bow
+let initialStringX = Sparrow.position.x; // Position before drag of day
+
+window.addEventListener('mousedown', (event) => {
+    if (isDragging == false) {
+        isDragging = true;
+        dragStart = { x: event.clientX }; // get start position
+    }
+});
+
+window.addEventListener('mousemove', (event) => {
+    if (isDragging) {
+        const deltaX = event.clientX - dragStart.x;
+        Sparrow.position.x = initialBowX + deltaX * 0.01;
+        Sparrow.position.x = initialStringX + deltaX * 0.01;
+    }
+});
+window.addEventListener('mouseup', () => {
+    if (isDragging) {
+        isDragging = false;
+        shootArrow();
+        Sparrow.position.x = initialBowX; // reset
+        Sparrow.position.x = initialStringX; // reset
+    }
+});
+
 // Loop ----------------------------------------------------------------
 function animate() {
 
@@ -129,9 +161,3 @@ function animate() {
     renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
-
-window.addEventListener('keydown', (event) => {
-    if (event.key === ' ') { // Phím cách để bắn
-        shootArrow();
-    }
-});
