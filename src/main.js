@@ -94,13 +94,13 @@ scene.add(plane);
 //physic--------------------------------------------------------------------------------------------
 plane.receiveShadow = true;
 const world = new CANNON.World();
-world.gravity.set(0, -9.82 , 0)
+world.gravity.set(0, -9.82 , 9)
 
 const groundPhysMat = new CANNON.Material
 
 const groundBody = new CANNON.Body({
-  //shape: new CANNON.Box(new CANNON.Vec3(50, 1, 50)),
-  shape: new CANNON.Box(new CANNON.Vec3(40,40,0.1)),
+  shape: new CANNON.Plane(),
+  //shape: new CANNON.Box(new CANNON.Vec3(40,40,0.1)),
   //mass: 10
   type: CANNON.Body.STATIC,
   material: groundPhysMat
@@ -112,9 +112,9 @@ groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
 const spherePhysMat = new CANNON.Material();
 
 const SphereBody = new CANNON.Body({
-  mass: 1,
+  mass: 10,
   shape: new CANNON.Sphere(4),
-  position: new CANNON.Vec3(0,40,2),
+  position: new CANNON.Vec3(0,80,0),
   material: spherePhysMat
 })
 
@@ -122,8 +122,8 @@ const groundSphereContactMat = new CANNON.ContactMaterial(
   groundPhysMat,
   spherePhysMat,
   {
-    friction: 0.1, 
-    restitution: 1 
+  //  friction: 0.04, 
+    restitution: 0.9 
   }
 );
 
@@ -131,6 +131,7 @@ world.addContactMaterial(groundSphereContactMat)
 
 world.addBody(SphereBody);
 
+SphereBody.linearDamping = 0.31
 
 const BoxBody = new CANNON.Body({
   mass: 1,
@@ -331,7 +332,7 @@ let movein = 2;
 
 function animate() {
 
-  world.step(timeStep)
+  world.step(timeStep * 2)
   plane.position.copy(groundBody.position);
   plane.quaternion.copy(groundBody.quaternion);
 
