@@ -1,9 +1,18 @@
 import * as THREE from 'three';
+import * as CANNON from 'cannon-es';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { cube, Sphere, plane, gridHelper, ambientLight } from './player.js';
+
 import * as dat from 'https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.module.js';
 
+//World with physics
+
+
+// const groundGeo = new THREE.PlaneGeometry
+
+
+// const groundMesh = new THREE.Mesh(groundGeo, groundMat)
 
 
 
@@ -81,7 +90,57 @@ const controls = new OrbitControls(camera, renderer.domElement);
 //add obj and some effect-----------------------------------------------------------------------------------------------------------------------------------------------
 
 scene.add(plane);
+
+//physic--------------------------------------------------------------------------------------------
 plane.receiveShadow = true;
+const world = new CANNON.World();
+world.gravity.set(0, -9.82 , 0)
+
+const groundPhysMat = new CANNON.Material
+
+const groundBody = new CANNON.Body({
+  //shape: new CANNON.Box(new CANNON.Vec3(50, 1, 50)),
+  shape: new CANNON.Box(new CANNON.Vec3(40,40,0.1)),
+  //mass: 10
+  type: CANNON.Body.STATIC,
+  material: groundPhysMat
+});
+
+world.addBody(groundBody);
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
+
+const spherePhysMat = new CANNON.Material();
+
+const SphereBody = new CANNON.Body({
+  mass: 1,
+  shape: new CANNON.Sphere(4),
+  position: new CANNON.Vec3(0,40,2),
+  material: spherePhysMat
+})
+
+const groundSphereContactMat = new CANNON.ContactMaterial(
+  groundPhysMat,
+  spherePhysMat,
+  {
+    friction: 0.1, 
+    restitution: 1 
+  }
+);
+
+world.addContactMaterial(groundSphereContactMat)
+
+world.addBody(SphereBody);
+
+
+const BoxBody = new CANNON.Body({
+  mass: 1,
+  shape : new CANNON.Box(new CANNON.Vec3(2,2,2)),
+  position: new CANNON.Vec3(0,50,0)
+})
+
+world.addBody(BoxBody);
+
+const timeStep = 1 / 60;
 
 scene.add(Sphere);
 Sphere.castShadow = true;
@@ -92,14 +151,15 @@ scene.add(cube);
 cube.castShadow = true;
 
 scene.add(ambientLight);
-
-const SlingShot = new URL('../src/3D object/SlingShot.glb', import.meta.url) ;
 const assetLoader = new GLTFLoader();
+
+const SlingShot = new URL('../src/3D object/nhap.glb', import.meta.url) ;
 assetLoader.load(SlingShot.href, function(gltf){
   const model = gltf.scene;
   scene.add(model);
   model.castShadow = true
   model.scale.set(2,2,2)
+  model.position.set(0,0,20)
   
   model.traverse(function(child) {
     if (child.isMesh) {
@@ -108,12 +168,9 @@ assetLoader.load(SlingShot.href, function(gltf){
     }
   });
 
-
-
 }, undefined, function(error) {
   console.error(error)
 })
-
 
 
 
@@ -272,8 +329,18 @@ document.addEventListener('keydown', (event) => {
 
 let movein = 2;
 
-
 function animate() {
+
+  world.step(timeStep)
+  plane.position.copy(groundBody.position);
+  plane.quaternion.copy(groundBody.quaternion);
+
+  //  cube.position.copy(BoxBody.position);
+  //  cube.quaternion.copy(BoxBody.quaternion);
+
+  Sphere.position.copy(SphereBody.position);
+  Sphere.quaternion.copy(SphereBody.quaternion);
+
   directionalLight.target.position.copy(cube.position);
   directionalLight.position.set(cube.position.x, cube.position.y+70, cube.position.z+70)
   scene.add(directionalLight.target);
@@ -288,9 +355,11 @@ function animate() {
   controls.update();
 
   renderer.render(scene, camera);
-
-
   const distance = cube.position.distanceTo(camera.position);
+
+  //physics-------------------------------------------------------------
+ 
+
 
 
 
@@ -377,9 +446,9 @@ if (isJumping) {
 
 
   // Cập nhật vị trí Sphere (chỉ để ví dụ)
-  step += option.speed;
-  Sphere.position.y = 20 * Math.abs(Math.sin(step));
-  Sphere.position.x = 20 * (Math.cos(step));
+  // step += option.speed;
+  // Sphere.position.y = 20 * Math.abs(Math.sin(step));
+  // Sphere.position.x = 20 * (Math.cos(step));
 
 
  
