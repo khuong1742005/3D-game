@@ -175,7 +175,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 
 			// Tower 1
 			const towerMass = 800;
-			const towerHalfExtents = new THREE.Vector3( 2, 5, 2 );
+			const towerHalfExtents = new THREE.Vector3( 6, 10, 6 );
 			pos.set( - 8, 5, 0 );
 			quat.set( 0, 0, 0, 1 );
 			createObject( towerMass, towerHalfExtents, pos, quat, createMaterial( 0xB03014 ) );
@@ -186,9 +186,9 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 			createObject( towerMass, towerHalfExtents, pos, quat, createMaterial( 0xB03214 ) );
 
 			//Bridge
-			const bridgeMass = 100;
+			const bridgeMass = 10;
 			const bridgeHalfExtents = new THREE.Vector3( 7, 0.2, 1.5 );
-			pos.set( 0, 10.2, 0 );
+			pos.set( 0, 15.2, 0 );
 			quat.set( 0, 0, 0, 1 );
 			createObject( bridgeMass, bridgeHalfExtents, pos, quat, createMaterial( 0xB3B865 ) );
 
@@ -199,7 +199,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 			quat.set( 0, 0, 0, 1 );
 			for ( let i = 0; i < numStones; i ++ ) {
 
-				pos.set( -4, 3, 35 * ( 0.5 - i / ( numStones + 1 ) ) );
+				pos.set( -15, 3, 35 * ( 0.5 - i / ( numStones + 1 ) ) );
 
 				createObject( stoneMass, stoneHalfExtents, pos, quat, createMaterial( 0xB0B0B0 ) );
 
@@ -208,7 +208,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 			// Mountain
 			const mountainMass = 760;
 			const mountainHalfExtents = new THREE.Vector3( 4, 5, 4 );
-			pos.set( 5, mountainHalfExtents.y * 0.5, - 7 );
+			pos.set( 5, mountainHalfExtents.y * 0.5, - 11 );
 			quat.set( 0, 0, 0, 1 );
 			const mountainPoints = [];
 			mountainPoints.push( new THREE.Vector3( mountainHalfExtents.x, - mountainHalfExtents.y, mountainHalfExtents.z ) );
@@ -550,7 +550,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 
 				if ( breakable0 && ! collided0 && maxImpulse > fractureImpulse ) {
 
-					const debris = convexBreaker.subdivideByImpact( threeObject0, impactPoint, impactNormal, 1, 4, 1.2  );
+					const debris = convexBreaker.subdivideByImpact( threeObject0, impactPoint, impactNormal, 1, 2, 1.5  );
 
 					const numObjects = debris.length;
 					for ( let j = 0; j < numObjects; j ++ ) {
@@ -572,7 +572,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 
 				if ( breakable1 && ! collided1 && maxImpulse > fractureImpulse ) {
 
-					const debris = convexBreaker.subdivideByImpact( threeObject1, impactPoint, impactNormal, 2, 2, 1.2  );
+					const debris = convexBreaker.subdivideByImpact( threeObject1, impactPoint, impactNormal, 1, 2, 1.5  );
 
 					const numObjects = debris.length;
 					for ( let j = 0; j < numObjects; j ++ ) {
