@@ -83,7 +83,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 			scene = new THREE.Scene();
 			scene.background = new THREE.Color( 0xbfd1e5 );
 
-			camera.position.set( - 14, 8, 16 );
+			camera.position.set( - 50, 50, 56 );
 
 			renderer = new THREE.WebGLRenderer( { antialias: true } );
 			renderer.setPixelRatio( window.devicePixelRatio );
@@ -104,6 +104,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 			const light = new THREE.DirectionalLight( 0xffffff, 3 );
 			light.position.set( - 10, 18, 5 );
 			light.castShadow = true;
+      light.intensity = 0.15;
 			const d = 14;
 			light.shadow.camera.left = - d;
 			light.shadow.camera.right = d;
@@ -160,7 +161,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 			// Ground
 			pos.set( 0, - 0.5, 0 );
 			quat.set( 0, 0, 0, 1 );
-			const ground = createParalellepipedWithPhysics( 40, 1, 40, 0, pos, quat, new THREE.MeshPhongMaterial( { color: 0xFFFFFF } ) );
+			const ground = createParalellepipedWithPhysics( 1000, 1, 1000, 0, pos, quat, new THREE.MeshPhongMaterial( { color: 0xFFFFFF } ) );
 			ground.receiveShadow = true;
 			textureLoader.load( 'textures/grid.png', function ( texture ) {
 
@@ -173,7 +174,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 			} );
 
 			// Tower 1
-			const towerMass = 1000;
+			const towerMass = 800;
 			const towerHalfExtents = new THREE.Vector3( 2, 5, 2 );
 			pos.set( - 8, 5, 0 );
 			quat.set( 0, 0, 0, 1 );
@@ -194,18 +195,18 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 			// Stones
 			const stoneMass = 120;
 			const stoneHalfExtents = new THREE.Vector3( 1, 2, 0.15 );
-			const numStones = 8;
+			const numStones = 45;
 			quat.set( 0, 0, 0, 1 );
 			for ( let i = 0; i < numStones; i ++ ) {
 
-				pos.set( 0, 2, 15 * ( 0.5 - i / ( numStones + 1 ) ) );
+				pos.set( -4, 3, 35 * ( 0.5 - i / ( numStones + 1 ) ) );
 
 				createObject( stoneMass, stoneHalfExtents, pos, quat, createMaterial( 0xB0B0B0 ) );
 
 			}
 
 			// Mountain
-			const mountainMass = 860;
+			const mountainMass = 760;
 			const mountainHalfExtents = new THREE.Vector3( 4, 5, 4 );
 			pos.set( 5, mountainHalfExtents.y * 0.5, - 7 );
 			quat.set( 0, 0, 0, 1 );
@@ -357,36 +358,77 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 
 		}
 
+
+
+    function throwball( startPosition ) {
+      const ballMass = 15;
+      const ballRadius = 1.4;
+  
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(ballRadius, 14, 10), ballMaterial);
+      ball.castShadow = true;
+      ball.receiveShadow = true;
+      const ballShape = new Ammo.btSphereShape(ballRadius);
+  
+      ballShape.setMargin(margin);
+  
+      
+      
+      pos.copy(startPosition); 
+  
+  
+      const targetPosition = new THREE.Vector3(0, 0, 0);
+  
+     
+      const direction = new THREE.Vector3().subVectors(targetPosition, startPosition);
+      direction.normalize(); 
+  
+    
+      quat.set(0, 0, 0, 1);  
+      const ballBody = createRigidBody(ball, ballShape, ballMass, pos, quat);
+  
+      
+      const speed = 84;  
+      direction.multiplyScalar(speed);  
+      ballBody.setLinearVelocity(new Ammo.btVector3(direction.x, direction.y, direction.z));  // Set the velocity in the physics world
+  
+    }
+
+
 		function initInput() {
 
-			window.addEventListener( 'pointerdown', function ( event ) {
 
-				mouseCoords.set(
-					( event.clientX / window.innerWidth ) * 2 - 1,
-					- ( event.clientY / window.innerHeight ) * 2 + 1
-				);
 
-				raycaster.setFromCamera( mouseCoords, camera );
 
-				// Creates a ball and throws it
-				const ballMass = 35;
-				const ballRadius = 0.4;
 
-				const ball = new THREE.Mesh( new THREE.SphereGeometry( ballRadius, 14, 10 ), ballMaterial );
-				ball.castShadow = true;
-				ball.receiveShadow = true;
-				const ballShape = new Ammo.btSphereShape( ballRadius );
-				ballShape.setMargin( margin );
-				pos.copy( raycaster.ray.direction );
-				pos.add( raycaster.ray.origin );
-				quat.set( 0, 0, 0, 1 );
-				const ballBody = createRigidBody( ball, ballShape, ballMass, pos, quat );
+			window.addEventListener('keydown', function(event) {
+        if (event.key === 'a')  {
+          let startPosition = new THREE.Vector3(-60, 60, 0);
+          throwball( startPosition );
+        }
 
-				pos.copy( raycaster.ray.direction );
-				pos.multiplyScalar( 24 );
-				ballBody.setLinearVelocity( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+        if (event.key === 'w')  {
+          let startPosition = new THREE.Vector3(0, 60, 60);
+          throwball( startPosition );
+        }
 
-			} );
+        if (event.key === 's')  {
+          let startPosition = new THREE.Vector3(0, 60, -60);
+          throwball( startPosition );
+        }
+
+        if (event.key === 'd')  {
+          let startPosition = new THREE.Vector3(60, 60, 0);
+          throwball( startPosition );
+        }
+
+    });
+    
+
+    
+
+
+
+
 
 		}
 
@@ -508,7 +550,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 
 				if ( breakable0 && ! collided0 && maxImpulse > fractureImpulse ) {
 
-					const debris = convexBreaker.subdivideByImpact( threeObject0, impactPoint, impactNormal, 1, 2, 1.5 );
+					const debris = convexBreaker.subdivideByImpact( threeObject0, impactPoint, impactNormal, 1, 4, 1.2  );
 
 					const numObjects = debris.length;
 					for ( let j = 0; j < numObjects; j ++ ) {
@@ -530,7 +572,7 @@ import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/Co
 
 				if ( breakable1 && ! collided1 && maxImpulse > fractureImpulse ) {
 
-					const debris = convexBreaker.subdivideByImpact( threeObject1, impactPoint, impactNormal, 1, 2, 1.5 );
+					const debris = convexBreaker.subdivideByImpact( threeObject1, impactPoint, impactNormal, 2, 2, 1.2  );
 
 					const numObjects = debris.length;
 					for ( let j = 0; j < numObjects; j ++ ) {
