@@ -15,10 +15,13 @@ plane.rotation.x = Math.PI * -0.5;
 
 
 // cube
-const geometry = new THREE.BoxGeometry(24,36,16);
+const geometry = new THREE.BoxGeometry(10,10,10);
 const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geometry, material);
 cube.position.set(-25, 5, 30)
+
+
+
 
 // create a sphere
 
@@ -34,4 +37,4 @@ const ambientLight = new THREE.AmbientLight(0x333333)
 
 //cube.scale.set(2, 2, 2);   //size of cube
 //scene.add(cube)
-export{cube, Sphere, plane, gridHelper, ambientLight}
+export{cube, Sphere, plane, gridHelper, ambientLight, geometry, material}

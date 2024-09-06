@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { cube, Sphere, plane, gridHelper, ambientLight } from './player.js';
+
+import { cube, Sphere, plane, gridHelper, ambientLight, geometry, material } from './player.js';
 
 import * as dat from 'https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.module.js';
 
@@ -15,7 +16,14 @@ import * as dat from 'https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.m
 // const groundMesh = new THREE.Mesh(groundGeo, groundMat)
 
 
+// //ammo ---------------------------------------------------------------------------------------------------------------------------------------
+// Ammo().then( function ( AmmoLib ) {
 
+//   Ammo = AmmoLib;
+
+//  animate();
+
+// } );
 
 
 //Scene
@@ -51,14 +59,14 @@ const SunVideoTexture = new THREE.VideoTexture(Sunvideo);
 
 //scene.background = videoTexture;
 //night
-const geometry = new THREE.SphereGeometry(100000, 60, 40);
-geometry.scale(-1, 1, 1); // Đảo ngược mặt ngoài của hình cầu
-const material = new THREE.MeshBasicMaterial({
+const Sungeometry = new THREE.SphereGeometry(100000, 60, 40);
+Sungeometry.scale(-1, 1, 1); // Đảo ngược mặt ngoài của hình cầu
+const Sunmaterial = new THREE.MeshBasicMaterial({
    map: videoTexture,
  // emissive: new THREE.Color(0xFFFF00), // Màu phát sáng (vàng)
   //emissiveIntensity: 50
    });
-const sphere = new THREE.Mesh(geometry, material);
+const sphere = new THREE.Mesh(Sungeometry, Sunmaterial);
 scene.add(sphere);
 
 const light = new THREE.PointLight(0x000000, 10, 700); // Ánh sáng điểm màu vàng
@@ -94,7 +102,7 @@ scene.add(plane);
 //physic--------------------------------------------------------------------------------------------
 plane.receiveShadow = true;
 const world = new CANNON.World();
-world.gravity.set(0, -9.82 , 0)
+world.gravity.set(0, -9.82 , -5)
 
 const groundPhysMat = new CANNON.Material
 
@@ -106,15 +114,34 @@ const groundBody = new CANNON.Body({
   material: groundPhysMat
 });
 
+
+
+function PhysicWorld(){
+  world.step(timeStep * 4)
+  plane.position.copy(groundBody.position);
+  plane.quaternion.copy(groundBody.quaternion);
+
+  //  BoxBody.position.copy(cube.position);
+  // BoxBody.quaternion.copy(cube.quaternion);
+
+  cube1.position.copy(BoxBody.position);
+  cube1.quaternion.copy(BoxBody.quaternion);
+
+
+  Sphere.position.copy(SphereBody.position);
+  Sphere.quaternion.copy(SphereBody.quaternion);
+
+}
+
 world.addBody(groundBody);
 groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
 
 const spherePhysMat = new CANNON.Material();
 
 const SphereBody = new CANNON.Body({
-  mass: 10,
+  mass: 400,
   shape: new CANNON.Sphere(4),
-  position: new CANNON.Vec3(0,80,0),
+  position: new CANNON.Vec3(0,280,0),
   material: spherePhysMat
 })
 
@@ -135,21 +162,95 @@ SphereBody.linearDamping = 0.21
 
 const BoxBody = new CANNON.Body({
   mass: 10,
-  shape : new CANNON.Box(new CANNON.Vec3(24,36,16)),
-  position: new CANNON.Vec3(-25, 5, 30)
+  shape : new CANNON.Box(new CANNON.Vec3(50, 50, 50)),
+  position: new CANNON.Vec3(0, 50, -140),
+  friction: 0.4
 })
+
+
 
 world.addBody(BoxBody);
 
 const timeStep = 1 / 60;
+//----------------------------------------------------------------------------------
 
+function breakCube1() {
+  // Loại bỏ cube1 khỏi cảnh và thế giới vật lý
+  scene.remove(cube1);
+  world.removeBody(BoxBody);
+
+  // Số lượng mảnh vỡ
+  const fragmentCount = 10;
+
+  // Kích thước của mỗi mảnh
+  const fragmentSize = cube1.scale.x / fragmentCount;
+
+  for (let i = 0; i < fragmentCount; i++) {
+    for (let j = 0; j < fragmentCount; j++) {
+      for (let k = 0; k < fragmentCount; k++) {
+        // Tạo hình học và vật liệu cho từng mảnh vỡ
+        const fragmentGeometry = new THREE.BoxGeometry(fragmentSize, fragmentSize, fragmentSize);
+        const fragmentMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+        const fragment = new THREE.Mesh(fragmentGeometry, fragmentMaterial);
+        
+        // Vị trí của từng mảnh vỡ
+        fragment.position.set(
+          cube1.position.x + (i - fragmentCount / 2) * fragmentSize,
+          cube1.position.y + (j - fragmentCount / 2) * fragmentSize,
+          cube1.position.z + (k - fragmentCount / 2) * fragmentSize
+        );
+        
+        // Thêm mảnh vỡ vào cảnh
+        scene.add(fragment);
+
+        // Tạo body cho mỗi mảnh vỡ
+        const fragmentBody = new CANNON.Body({
+          mass: 1,  // Đặt khối lượng cho mỗi mảnh nhỏ
+          shape: new CANNON.Box(new CANNON.Vec3(fragmentSize / 2, fragmentSize / 2, fragmentSize / 2)),
+          position: new CANNON.Vec3(
+            fragment.position.x,
+            fragment.position.y,
+            fragment.position.z
+          )
+        });
+        
+        // Đẩy các mảnh vỡ ra khỏi vị trí ban đầu
+        const force = new CANNON.Vec3(
+          (Math.random() - 0.5) * 10,
+          (Math.random() - 0.5) * 10,
+          (Math.random() - 0.5) * 10
+        );
+        fragmentBody.applyImpulse(force, fragmentBody.position);
+        
+        // Thêm các mảnh vỡ vào thế giới vật lý
+        world.addBody(fragmentBody);
+      }
+    }
+  }
+}
+
+// world.addEventListener('postStep', function() {
+//   // Kiểm tra va chạm giữa cube1 và các vật thể khác
+//   if (/* logic kiểm tra va chạm giữa BoxBody và vật thể khác */) {
+//     breakCube1();
+//   }
+// });
+//------------------------------------------------------------------------------------------
 scene.add(Sphere);
 Sphere.castShadow = true;
-
+Sphere.receiveShadow = true;
 
 
 scene.add(cube);
 cube.castShadow = true;
+cube.receiveShadow = true;
+
+const cube1 = new THREE.Mesh(geometry, material)
+scene.add(cube1)
+//cube1.position.set(0, 20, 20);
+cube1.scale.set(10, 10, 10)
+cube1.castShadow = true;
+cube1.receiveShadow = true;
 
 scene.add(ambientLight);
 const assetLoader = new GLTFLoader();
@@ -173,6 +274,10 @@ assetLoader.load(SlingShot.href, function(gltf){
   console.error(error)
 })
 
+
+
+
+//breakCube1();
 
 
 
@@ -243,7 +348,7 @@ directionalLight.shadow.mapSize.height = 2048;
 controls.dampingFactor = 0.05; // Điều chỉnh độ mượt
 controls.enableZoom = true; // Cho phép phóng to/thu nhỏ
 controls.minDistance = 0; // Khoảng cách tối thiểu khi zoom
-controls.maxDistance = 80; // Khoảng cách tối đa khi zoom
+controls.maxDistance = 180; // Khoảng cách tối đa khi zoom
 controls.maxPolarAngle = Math.PI * 2; // Giới hạn góc nhìn xuống dưới
 
 //control keys
@@ -332,16 +437,8 @@ let movein = 2;
 
 function animate() {
 
-  world.step(timeStep * 4)
-  plane.position.copy(groundBody.position);
-  plane.quaternion.copy(groundBody.quaternion);
-
-  BoxBody.position.copy(cube.position);
-  BoxBody.quaternion.copy(cube.quaternion);
-
-  Sphere.position.copy(SphereBody.position);
-  Sphere.quaternion.copy(SphereBody.quaternion);
-
+  PhysicWorld();
+  
   directionalLight.target.position.copy(cube.position);
   directionalLight.position.set(cube.position.x, cube.position.y+70, cube.position.z+70)
   scene.add(directionalLight.target);
@@ -456,7 +553,7 @@ if (isJumping) {
 }
 
 // Đặt vị trí ban đầu của camera
-camera.position.set(-60, 60, 60);
+camera.position.set(-120, 120, 120);
 
 // loop
 animate();
