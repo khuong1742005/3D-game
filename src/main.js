@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import Stats from '../node_modules/three/examples/jsm/libs/stats.module.js'
-import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
-import { ConvexObjectBreaker } from '../node_modules/three/examples/jsm/misc/ConvexObjectBreaker.js'
-import { ConvexGeometry } from '../node_modules/three/examples/jsm/geometries/ConvexGeometry.js';
+import Stats from 'three/addons/libs/stats.module.js'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ConvexObjectBreaker } from 'three/addons/misc/ConvexObjectBreaker.js'
+import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
 
 // - Global variables -
