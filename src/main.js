@@ -83,7 +83,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			scene = new THREE.Scene();
 			scene.background = new THREE.Color( 0xbfd1e5 );
 
-			camera.position.set( - 50, 50, 56 );
+			camera.position.set( - 50, 50, -56 );
 
 			renderer = new THREE.WebGLRenderer( { antialias: true } );
 			renderer.setPixelRatio( window.devicePixelRatio );
@@ -100,24 +100,30 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
 			const ambientLight = new THREE.AmbientLight( 0xbbbbbb );
 			scene.add( ambientLight );
-
-			const light = new THREE.DirectionalLight( 0xffffff, 3 );
-			light.position.set( - 10, 18, 5 );
+			let Num = 1.2
+			const light = new THREE.DirectionalLight( 0xffffff, 0.25 );
+			light.position.set( - 100 * Num , 130 * Num , -50 * Num );
 			light.castShadow = true;
-      light.intensity = 0.15;
-			const d = 14;
+      		//light.intensity = 0.15;
+			const d = 444;
 			light.shadow.camera.left = - d;
 			light.shadow.camera.right = d;
 			light.shadow.camera.top = d;
 			light.shadow.camera.bottom = - d;
 
 			light.shadow.camera.near = 2;
-			light.shadow.camera.far = 50;
+			light.shadow.camera.far = 570;
 
-			light.shadow.mapSize.x = 1024;
-			light.shadow.mapSize.y = 1024;
+			light.shadow.mapSize.x = 2024;
+			light.shadow.mapSize.y = 2024;
 
 			scene.add( light );
+
+			const DLightHelper = new THREE.DirectionalLightHelper(light);
+			scene.add(DLightHelper);
+
+			const DLightShadowHelper = new THREE.CameraHelper(light.shadow.camera);
+			scene.add(DLightShadowHelper)
 
 			stats = new Stats();
 			stats.domElement.style.position = 'absolute';
@@ -157,6 +163,15 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 		}
 
 		function createObjects() {
+			
+			//cube
+			const CubeMass = 150;
+			const CubeHaflExtents = new THREE.Vector3(5, 5, 5);
+			pos.set(-35, 0, 0);
+			quat.set(0, 0, 0, 1);
+			createObject( CubeMass, CubeHaflExtents, pos, quat, createMaterial( 0xB03014 ) );
+
+
 
 			// Ground
 			pos.set( 0, - 0.5, 0 );
@@ -185,9 +200,20 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			quat.set( 0, 0, 0, 1 );
 			createObject( towerMass, towerHalfExtents, pos, quat, createMaterial( 0xB03214 ) );
 
+			// Gray Tower 1
+			const towerMassGray = 400;
+			pos.set( 20, 30.3, 0 );
+			quat.set( 0, 0, 0, 1 );
+			createObject( towerMassGray, towerHalfExtents, pos, quat, createMaterial( 0x333232 ) );
+
+			// Gray Tower 2
+			pos.set( -20, 30.3, 0 );
+			quat.set( 0, 0, 0, 1 );
+			createObject( towerMassGray, towerHalfExtents, pos, quat, createMaterial( 0x333232 ) );
+
 			//Bridge
-			const bridgeMass = 10;
-			const bridgeHalfExtents = new THREE.Vector3( 7, 0.2, 1.5 );
+			const bridgeMass = 215;
+			const bridgeHalfExtents = new THREE.Vector3( 30, 1.2, 6 );
 			pos.set( 0, 15.2, 0 );
 			quat.set( 0, 0, 0, 1 );
 			createObject( bridgeMass, bridgeHalfExtents, pos, quat, createMaterial( 0xB3B865 ) );
@@ -199,16 +225,16 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			quat.set( 0, 0, 0, 1 );
 			for ( let i = 0; i < numStones; i ++ ) {
 
-				pos.set( -15, 3, 35 * ( 0.5 - i / ( numStones + 1 ) ) );
+				pos.set( -17, 3, 35 * ( 0.5 - i / ( numStones + 1 ) ) );
 
 				createObject( stoneMass, stoneHalfExtents, pos, quat, createMaterial( 0xB0B0B0 ) );
 
 			}
 
 			// Mountain
-			const mountainMass = 760;
-			const mountainHalfExtents = new THREE.Vector3( 4, 5, 4 );
-			pos.set( 5, mountainHalfExtents.y * 0.5, - 11 );
+			const mountainMass = 500;
+			const mountainHalfExtents = new THREE.Vector3( 90, 100, 90 );
+			pos.set( 0, mountainHalfExtents.y * 0.5, - 180 );
 			quat.set( 0, 0, 0, 1 );
 			const mountainPoints = [];
 			mountainPoints.push( new THREE.Vector3( mountainHalfExtents.x, - mountainHalfExtents.y, mountainHalfExtents.z ) );
@@ -361,7 +387,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
 
     function throwball( startPosition ) {
-      const ballMass = 15;
+      const ballMass = 40;
       const ballRadius = 1.4;
   
       const ball = new THREE.Mesh(new THREE.SphereGeometry(ballRadius, 14, 10), ballMaterial);
@@ -407,7 +433,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
         }
 
         if (event.key === 'w')  {
-          let startPosition = new THREE.Vector3(0, 60, 60);
+          let startPosition = new THREE.Vector3(0, 600, 600);
           throwball( startPosition );
         }
 
@@ -452,7 +478,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
 			const deltaTime = clock.getDelta();
 
-			updatePhysics( deltaTime );
+			updatePhysics( deltaTime * 1.5 );
 
 			renderer.render( scene, camera );
 
