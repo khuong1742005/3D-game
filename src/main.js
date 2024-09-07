@@ -15,6 +15,9 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
 		const mouseCoords = new THREE.Vector2();
 		const raycaster = new THREE.Raycaster();
+		const MoveMouse = new THREE.Vector2();	
+		var draggable = new THREE.Object3D();
+
 		const ballMaterial = new THREE.MeshPhongMaterial( { color: 0x202020 } );
 
 		// Physics variables
@@ -83,7 +86,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			scene = new THREE.Scene();
 			scene.background = new THREE.Color( 0xbfd1e5 );
 
-			camera.position.set( - 50, 50, -56 );
+			camera.position.set( - 50, 50, 56 );
 
 			renderer = new THREE.WebGLRenderer( { antialias: true } );
 			renderer.setPixelRatio( window.devicePixelRatio );
@@ -118,6 +121,33 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			light.shadow.mapSize.y = 2024;
 
 			scene.add( light );
+
+			const CubeTest = new THREE.Mesh(new THREE.SphereGeometry(1.4), new THREE.MeshPhongMaterial({ color: 0x202020 }));
+			scene.add(CubeTest);
+			CubeTest.position.set(0, 1.4, 63)
+			CubeTest.castShadow = true;
+			CubeTest.receiveShadow = true;
+			CubeTest.name = "CubeTest"
+			//CubeTest.visible = false;
+
+			window.addEventListener('keydown', function(event) {
+				if (event.key === 'r')  {
+				  
+				 CubeTest.visible = true;
+				 CubeTest.position.set(0, 1.4, 63)
+				 
+				}
+			})
+
+
+
+			
+			const RedPoint = new THREE.Mesh(new THREE.SphereGeometry(1), new THREE.MeshPhongMaterial({ color: 0xde0000 }));
+			scene.add(RedPoint);
+			RedPoint.position.set(0, 6, 60)
+			RedPoint.castShadow = true;
+			RedPoint.receiveShadow = true;
+
 
 			const DLightHelper = new THREE.DirectionalLightHelper(light);
 			scene.add(DLightHelper);
@@ -178,6 +208,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			quat.set( 0, 0, 0, 1 );
 			const ground = createParalellepipedWithPhysics( 1000, 1, 1000, 0, pos, quat, new THREE.MeshPhongMaterial( { color: 0xFFFFFF } ) );
 			ground.receiveShadow = true;
+			ground.name = "Ground"
 			textureLoader.load( 'textures/grid.png', function ( texture ) {
 
 				texture.wrapS = THREE.RepeatWrapping;
@@ -201,7 +232,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			createObject( towerMass, towerHalfExtents, pos, quat, createMaterial( 0xB03214 ) );
 
 			// Gray Tower 1
-			const towerMassGray = 400;
+			const towerMassGray = 300;
 			pos.set( 20, 30.3, 0 );
 			quat.set( 0, 0, 0, 1 );
 			createObject( towerMassGray, towerHalfExtents, pos, quat, createMaterial( 0x333232 ) );
@@ -212,7 +243,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			createObject( towerMassGray, towerHalfExtents, pos, quat, createMaterial( 0x333232 ) );
 
 			//Bridge
-			const bridgeMass = 215;
+			const bridgeMass = 265;
 			const bridgeHalfExtents = new THREE.Vector3( 30, 1.2, 6 );
 			pos.set( 0, 15.2, 0 );
 			quat.set( 0, 0, 0, 1 );
@@ -402,38 +433,39 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
       pos.copy(startPosition); 
   
   
-      const targetPosition = new THREE.Vector3(0, 0, 0);
+      const targetPosition = new THREE.Vector3(0, 6, 60);
   
      
       const direction = new THREE.Vector3().subVectors(targetPosition, startPosition);
       direction.normalize(); 
-  
+	  const distance = startPosition.distanceTo(targetPosition);
+	  //console.log(distance)
     
       quat.set(0, 0, 0, 1);  
       const ballBody = createRigidBody(ball, ballShape, ballMass, pos, quat);
-  
+
+
+	  function Run(){
+		const speed = distance * 3;  
+		direction.multiplyScalar(speed);  
+		ballBody.setLinearVelocity(new Ammo.btVector3(direction.x, direction.y, direction.z));  // Set the velocity in the physics world
+	
+	  }
+	  Run();
       
-      const speed = 84;  
-      direction.multiplyScalar(speed);  
-      ballBody.setLinearVelocity(new Ammo.btVector3(direction.x, direction.y, direction.z));  // Set the velocity in the physics world
-  
+    
     }
 
 
+
+		
+		
 		function initInput() {
-
-
-
-
-
 			window.addEventListener('keydown', function(event) {
-        if (event.key === 'a')  {
-          let startPosition = new THREE.Vector3(-60, 60, 0);
-          throwball( startPosition );
-        }
+       
 
         if (event.key === 'w')  {
-          let startPosition = new THREE.Vector3(0, 600, 600);
+          let startPosition = new THREE.Vector3(0, 0, 60);
           throwball( startPosition );
         }
 
@@ -447,15 +479,60 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
           throwball( startPosition );
         }
 
-    });
-    
-
-    
+    	});
+		}
 
 
+		window.addEventListener('click', event => {
+			if (draggable) {
+				console.log("dropping draggable")
+				if (draggable.name == 'CubeTest') {
+					//scene.remove(draggable);
+					draggable.visible = false;
+					let startPosition = new THREE.Vector3(draggable.position.x, 0, draggable.position.z);
+          			throwball( startPosition );
+					
+				}
+				draggable = null;
+				
+				return;
+				
+			}
+
+			mouseCoords.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+			mouseCoords.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+			
+			raycaster.setFromCamera( mouseCoords, camera );
+			//console.log(raycaste.x)
+			const found = raycaster.intersectObjects( scene.children );
+			if (found.length > 0 && found[0].object.name != "Ground"){
+				draggable = found[0].object
+				console.log(found[0].object)
+				//found[0].object.position.set(0, 0, 0);
+				//found[0].object.updateMatrixWorld(true);
+
+			}
+		})
+
+		window.addEventListener('mousemove', event => {
+			MoveMouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+			MoveMouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+			
+		})
 
 
-
+		function dragObject() {
+			if (draggable != null){
+				raycaster.setFromCamera(MoveMouse, camera)
+				const found = raycaster.intersectObjects(scene.children)
+				if (found.length > 0) {
+					for (let o of found) {
+						draggable.position.x = o.point.x;
+						draggable.position.z = o.point.z;
+						draggable.position.y = 1.4;
+					}
+				}
+			}
 		}
 
 		function onWindowResize() {
@@ -468,7 +545,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 		}
 
 		function animate() {
-
+			dragObject();
 			render();
 			stats.update();
 
