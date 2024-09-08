@@ -3,6 +3,7 @@ import Stats from 'three/addons/libs/stats.module.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ConvexObjectBreaker } from 'three/addons/misc/ConvexObjectBreaker.js'
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
 // - Global variables -
@@ -86,7 +87,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			scene = new THREE.Scene();
 			scene.background = new THREE.Color( 0xbfd1e5 );
 
-			camera.position.set( - 50, 50, 56 );
+			camera.position.set( - 40, 80, 186 );
 
 			renderer = new THREE.WebGLRenderer( { antialias: true } );
 			renderer.setPixelRatio( window.devicePixelRatio );
@@ -124,7 +125,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
 			const CubeTest = new THREE.Mesh(new THREE.SphereGeometry(1.4), new THREE.MeshPhongMaterial({ color: 0x202020 }));
 			scene.add(CubeTest);
-			CubeTest.position.set(0, 1.4, 63)
+			CubeTest.position.set(0, 1.4, 90)
 			CubeTest.castShadow = true;
 			CubeTest.receiveShadow = true;
 			CubeTest.name = "CubeTest"
@@ -134,7 +135,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 				if (event.key === 'r')  {
 				  
 				 CubeTest.visible = true;
-				 CubeTest.position.set(0, 1.4, 63)
+				 CubeTest.position.set(0, 1.4, 90)
 				 
 				}
 			})
@@ -144,7 +145,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			
 			const RedPoint = new THREE.Mesh(new THREE.SphereGeometry(1), new THREE.MeshPhongMaterial({ color: 0xde0000 }));
 			scene.add(RedPoint);
-			RedPoint.position.set(0, 6, 60)
+			RedPoint.position.set(0, 28, 60)
 			RedPoint.castShadow = true;
 			RedPoint.receiveShadow = true;
 
@@ -194,6 +195,28 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
 		function createObjects() {
 			
+			//SlingShot	
+			const assetLoader = new GLTFLoader();
+			const SlingShot = new URL('../src/3D object/nhap.glb', import.meta.url) ;
+			assetLoader.load(SlingShot.href, function(gltf){
+			const model = gltf.scene;
+			scene.add(model);
+			model.castShadow = true
+			model.scale.set(1.2,1.2,1.2)
+			model.position.set(0,0,60)
+			
+			model.traverse(function(child) {
+				if (child.isMesh) {
+				child.castShadow = true;  
+				child.receiveShadow = true;
+				}
+			});
+
+			}, undefined, function(error) {
+			console.error(error)
+			})
+
+
 			//cube
 			const CubeMass = 150;
 			const CubeHaflExtents = new THREE.Vector3(5, 5, 5);
@@ -433,7 +456,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
       pos.copy(startPosition); 
   
   
-      const targetPosition = new THREE.Vector3(0, 6, 60);
+      const targetPosition = new THREE.Vector3(0, 28, 60);
   
      
       const direction = new THREE.Vector3().subVectors(targetPosition, startPosition);
@@ -446,7 +469,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
 
 	  function Run(){
-		const speed = distance * 3;  
+		const speed = distance * 1.3;  
 		direction.multiplyScalar(speed);  
 		ballBody.setLinearVelocity(new Ammo.btVector3(direction.x, direction.y, direction.z));  // Set the velocity in the physics world
 	
@@ -486,7 +509,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 		window.addEventListener('click', event => {
 			if (draggable) {
 				console.log("dropping draggable")
-				if (draggable.name == 'CubeTest') {
+				if (draggable.name == "CubeTest") {
 					//scene.remove(draggable);
 					draggable.visible = false;
 					let startPosition = new THREE.Vector3(draggable.position.x, 0, draggable.position.z);
@@ -505,7 +528,7 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 			raycaster.setFromCamera( mouseCoords, camera );
 			//console.log(raycaste.x)
 			const found = raycaster.intersectObjects( scene.children );
-			if (found.length > 0 && found[0].object.name != "Ground"){
+			if (found.length > 0 && found[0].object.name == "CubeTest"){
 				draggable = found[0].object
 				console.log(found[0].object)
 				//found[0].object.position.set(0, 0, 0);
