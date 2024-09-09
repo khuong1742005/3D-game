@@ -477,7 +477,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
 	  function Run(){
-	    speed = distance * 2;  
+	    speed = distance * 1.5;  
 		
 		direction.multiplyScalar(speed);  
 		ballBody.setLinearVelocity(new Ammo.btVector3(direction.x, direction.y, direction.z));  // Set the velocity in the physics world
@@ -565,7 +565,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 					}
 					
 
-					//console.log(SpeedDistance)
+				
 
 
 
@@ -573,19 +573,35 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 						const pointsForCurver = [];
 						const amplitude = 5; 
 						const frequency = 0.07;  
-						const numPoints = 20;  //length of curve
-						const AC = Math.sqrt(Math.pow(draggable.position.y - PublicRedPoint.y, 2) + Math.pow(draggable.position.z - PublicRedPoint.z, 2))
-						//console.log(speed)
+						const numPoints = 20;  
+						
+						const ACxyz = Math.sqrt(Math.pow(draggable.position.y - PublicRedPoint.y, 2) + Math.pow(draggable.position.z - PublicRedPoint.z, 2) + Math.pow(draggable.position.x - PublicRedPoint.x, 2));
+						const ACxz = Math.sqrt(Math.pow(draggable.position.z - PublicRedPoint.z, 2) + Math.pow(draggable.position.x - PublicRedPoint.x, 2));
+						const ACx = Math.sqrt(Math.pow(draggable.position.x - PublicRedPoint.x, 2));
+						const ACzx = Math.sqrt(Math.pow(draggable.position.z - PublicRedPoint.z, 2));
 						const SpeedDistance = draggable.position.distanceTo(PublicRedPoint);
-						for(let i = 0 ; i <= numPoints ; ++i) {
-							if (i <= numPoints / 2){
-								const x = -((SpeedDistance * 2 * (AC / SpeedDistance)) * i ) + draggable.position.z  ; 
-								console.log(draggable.position.x)
-								const y = (SpeedDistance * 2 * (PublicRedPoint.y / SpeedDistance) * i - (1/2) * gravityConstant * i * i);
-								pointsForCurver.push(new THREE.Vector3(0, y, x));
-							}
+						const SpeedForce = SpeedDistance * 1.5;
+						
+					
+						const v0x = SpeedForce * (ACx / ACxz) * (ACxyz / SpeedDistance);
+						const v0y = SpeedForce * (PublicRedPoint.y / SpeedDistance);
+						const v0z = SpeedForce * (ACzx / ACxz) * (ACxyz / SpeedDistance);
+						
+						for (let i = 0; i <= numPoints; ++i) {
+							const t = i;
 							
+							
+
+							let x
+							if (draggable.position.x >= 0)
+							    x = -v0x * t + draggable.position.x; else  x = v0x * t + draggable.position.x;
+							const y = v0y * t - (0.5 * gravityConstant * t * t) + draggable.position.y;
+							
+							const z = -v0z * t + draggable.position.z;
+							
+							pointsForCurver.push(new THREE.Vector3(x, y, z));
 						}
+						
 						const curve = new THREE.CatmullRomCurve3(pointsForCurver);
 			
 						const points = curve.getPoints( 530 );
@@ -594,8 +610,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 			
 						scene.add(splineObject)
 						setTimeout(() => {
-							scene.remove(splineObject); // Xóa đối tượng sau delay
-						}, 50);
+							scene.remove(splineObject); 
+						}, 10);
 						
 					}
 					CurveCreate();
