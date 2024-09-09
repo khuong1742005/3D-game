@@ -9,6 +9,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // - Global variables -
 
 		// Graphics variables
+		let speed;
 		let container, stats;
 		let camera, controls, scene, renderer;
 		let textureLoader;
@@ -29,6 +30,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 		let solver;
 		let physicsWorld;
 		const margin = 0.05;
+		const PublicRedPoint = new THREE.Vector3(0, 13, 60)
+		const PublicCubeTestPosition = new THREE.Vector3(0, 1.4, 90)
 
 		const convexBreaker = new ConvexObjectBreaker();
 
@@ -76,7 +79,12 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 			initInput();
 
+			
+
 		}
+
+			
+
 
 		function initGraphics() {
 
@@ -125,7 +133,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 			const CubeTest = new THREE.Mesh(new THREE.SphereGeometry(1.4), new THREE.MeshPhongMaterial({ color: 0x202020 }));
 			scene.add(CubeTest);
-			CubeTest.position.set(0, 1.4, 90)
+			CubeTest.position.copy(PublicCubeTestPosition)
 			CubeTest.castShadow = true;
 			CubeTest.receiveShadow = true;
 			CubeTest.name = "CubeTest"
@@ -145,7 +153,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 			
 			const RedPoint = new THREE.Mesh(new THREE.SphereGeometry(1), new THREE.MeshPhongMaterial({ color: 0xde0000 }));
 			scene.add(RedPoint);
-			RedPoint.position.set(0, 28, 60)
+			RedPoint.position.copy(PublicRedPoint)
 			RedPoint.castShadow = true;
 			RedPoint.receiveShadow = true;
 
@@ -202,7 +210,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 			const model = gltf.scene;
 			scene.add(model);
 			model.castShadow = true
-			model.scale.set(1.2,1.2,1.2)
+			model.scale.set(0.5,0.5,0.5)
 			model.position.set(0,0,60)
 			
 			model.traverse(function(child) {
@@ -441,7 +449,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
     function throwball( startPosition ) {
-      const ballMass = 40;
+      const ballMass = 400;
       const ballRadius = 1.4;
   
       const ball = new THREE.Mesh(new THREE.SphereGeometry(ballRadius, 14, 10), ballMaterial);
@@ -456,8 +464,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
       pos.copy(startPosition); 
   
   
-      const targetPosition = new THREE.Vector3(0, 28, 60);
-  
+      const targetPosition = PublicRedPoint;
+	  
      
       const direction = new THREE.Vector3().subVectors(targetPosition, startPosition);
       direction.normalize(); 
@@ -469,7 +477,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
 	  function Run(){
-		const speed = distance * 1.3;  
+	    speed = distance * 2;  
+		
 		direction.multiplyScalar(speed);  
 		ballBody.setLinearVelocity(new Ammo.btVector3(direction.x, direction.y, direction.z));  // Set the velocity in the physics world
 	
@@ -545,7 +554,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
 		function dragObject() {
-			if (draggable != null){
+			if (draggable != null && draggable.name == "CubeTest"){
 				raycaster.setFromCamera(MoveMouse, camera)
 				const found = raycaster.intersectObjects(scene.children)
 				if (found.length > 0) {
@@ -554,6 +563,44 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 						draggable.position.z = o.point.z;
 						draggable.position.y = 1.4;
 					}
+					
+
+					//console.log(SpeedDistance)
+
+
+
+					function CurveCreate() {
+						const pointsForCurver = [];
+						const amplitude = 5; 
+						const frequency = 0.07;  
+						const numPoints = 20;  //length of curve
+						const AC = Math.sqrt(Math.pow(draggable.position.y - PublicRedPoint.y, 2) + Math.pow(draggable.position.z - PublicRedPoint.z, 2))
+						//console.log(speed)
+						const SpeedDistance = draggable.position.distanceTo(PublicRedPoint);
+						for(let i = 0 ; i <= numPoints ; ++i) {
+							if (i <= numPoints / 2){
+								const x = -((SpeedDistance * 2 * (AC / SpeedDistance)) * i ) + draggable.position.z  ; 
+								console.log(draggable.position.x)
+								const y = (SpeedDistance * 2 * (PublicRedPoint.y / SpeedDistance) * i - (1/2) * gravityConstant * i * i);
+								pointsForCurver.push(new THREE.Vector3(0, y, x));
+							}
+							
+						}
+						const curve = new THREE.CatmullRomCurve3(pointsForCurver);
+			
+						const points = curve.getPoints( 530 );
+			
+						const splineObject = new THREE.Line( new THREE.BufferGeometry().setFromPoints( points ), new THREE.LineBasicMaterial( { color: 0xff0000 } ) );
+			
+						scene.add(splineObject)
+						setTimeout(() => {
+							scene.remove(splineObject); // Xóa đối tượng sau delay
+						}, 50);
+						
+					}
+					CurveCreate();
+					
+
 				}
 			}
 		}
@@ -568,7 +615,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 		}
 
 		function animate() {
+			//console.log(speed)
 			dragObject();
+			//CurveCreate();
 			render();
 			stats.update();
 
@@ -578,7 +627,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 			const deltaTime = clock.getDelta();
 
-			updatePhysics( deltaTime * 1.5 );
+			updatePhysics( deltaTime * 3.5 );
 
 			renderer.render( scene, camera );
 
