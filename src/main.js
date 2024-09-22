@@ -128,7 +128,8 @@ function initGraphics() {
 	window.addEventListener("keydown", function (event) {
 		if (event.key === "r") {
 			cubeTestModel.visible = true;
-			cubeTestModel.position.set(0, 1.4, 90);
+      
+			cubeTestModel.position.set(0, 0, 90);
 		}
 	});
 
@@ -546,7 +547,7 @@ function throwball(startPosition) {
 	direction.normalize();
 	const distance = startPosition.distanceTo(targetPosition);
 	quat.set(0, 0, 0, 1);
-	const ballBody = createRigidBody(ball, ballShape, ballMass, pos, quat);
+	const ballBody = createRigidBody(cubeTestModel, ballShape, ballMass, pos, quat);
 
 	function Run() {
 		speed = distance * 1.5;
@@ -564,7 +565,7 @@ window.addEventListener("click", (event) => {
 	if (draggable) {
 		console.log("dropping draggable");
 		if (draggable.name == "CubeTest") {
-			draggable.visible = false;
+			//draggable.visible = false;
 			let startPosition = new THREE.Vector3(
 				draggable.position.x,
 				0,
