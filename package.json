@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "name": "learn-threejs",
+=======
+  "name": "my-three-js-project",
+>>>>>>> 383d28587065b3ee5d87ef0f3c323fc0882ba23b
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -12,6 +16,10 @@
   "dependencies": {
     "cannon-es": "^0.20.0",
     "dat.gui": "^0.7.9",
+<<<<<<< HEAD
+=======
+    "save": "^2.9.0",
+>>>>>>> 383d28587065b3ee5d87ef0f3c323fc0882ba23b
     "three": "^0.167.1"
   },
   "devDependencies": {

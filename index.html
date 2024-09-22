@@ -7,12 +7,65 @@
     <style>
         body {
             margin: 0;
+<<<<<<< HEAD
         }
     </style>
 </head>
 
 <body>
     <script type="module" src="src/main.js"></script>
+=======
+            /* padding: 0; */
+            overflow: hidden;
+
+        }
+        .webgl {
+            display: none;
+        }
+        #info {
+            position: absolute;
+            top: 3%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7); 
+            color: white; 
+            font-size: 16px;
+            z-index: 1000; 
+            text-align: center; 
+           
+        }       
+        </style>
+            
+            <script type="importmap">
+                {
+                "imports": {
+                    "three": "https://cdn.jsdelivr.net/npm/three@v0.149.0/build/three.module.js",
+                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.149.0/examples/jsm/",
+                    "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+                }
+                }
+            </script>
+
+    
+</head>
+
+<body>
+    <div id="info">press R<br />To Reload the ball</div>
+    <div id="container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/three@v0.149.0/examples/jsm/libs/ammo.wasm.js"></script>
+    <h1 style="display: none;">hello world!</h1>
+    <!-- <video id="nightVideo" src="./src/mp4/night.mp4" style="display:none;"></video>
+    <video id="sunVideo" src="./src/mp4/SunSurface.mp4" style="display:none;"></video> -->
+    <!-- //<canvas class="webgl"></canvas> -->
+    <!-- <script type="module" src="./src/player.js"></script> -->
+    <script type="module" src="./src/main.js"></script>
+   
+    <!-- <h1>no 3d</h1> -->
+    
+
+    
+>>>>>>> 383d28587065b3ee5d87ef0f3c323fc0882ba23b
 </body>
 
 </html>
