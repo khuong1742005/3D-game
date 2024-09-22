@@ -653,8 +653,9 @@ function dragObject() {
     if (found.length > 0) {
       for (let o of found) {
         draggable.position.x = o.point.x;
-        draggable.position.z = o.point.z;
-        draggable.position.y = 1.4;
+
+        draggable.position.z = (o.point.z > 60) ? o.point.z : 60;
+        draggable.position.y = 0;
       }
 
       function CurveCreate() {
