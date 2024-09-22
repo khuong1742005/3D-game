@@ -142,7 +142,7 @@ window.addEventListener('mouseup', () => {
         isDragging = false;
         shootArrow();
         Sparrow.position.x = initialBowX; // reset
-        Sparrow.position.x = initialStringX; // reset
+        Sparrow.position.x = initialStringX; // reset 
     }
 });
 
