@@ -128,7 +128,7 @@ function initGraphics() {
 	window.addEventListener("keydown", function (event) {
 		if (event.key === "r") {
 			cubeTestModel.visible = true;
-      
+			Bird();
 			cubeTestModel.position.set(0, 0, 90);
 		}
 	});
@@ -190,9 +190,10 @@ function createObject(mass, halfExtents, pos, quat, material) {
 	createDebrisFromBreakableObject(object);
 }
 
-function Assets() {
+//----------------------------------------------------------------
+// Assets
 
-	// Assets
+function Bird() {
 	const blackBirdLoader = new GLTFLoader();
 	const blackBird = new URL("../src/3D object/blackC.glb", import.meta.url);
 	blackBirdLoader.load(blackBird.href, function (gltf) {
@@ -208,7 +209,11 @@ function Assets() {
 			}
 		});
 	});
+}
 
+function Assets() {
+
+	Bird();
 	//SlingShot
 	const assetLoader = new GLTFLoader();
 	const SlingShot = new URL("../src/3D object/nhap.glb", import.meta.url);
