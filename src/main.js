@@ -7,6 +7,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 // Global variables
 
+let ballBody
 let speed, cubeTestModel, step = 0;
 let container, stats;
 let camera, controls, scene, renderer;
@@ -78,7 +79,7 @@ function initGraphics() {
 		0.2,
 		2000
 	);
-	camera.position.set(-40, 80, 186);
+	camera.position.set(40, 40, 40);
 
 	// Scene 
 	scene = new THREE.Scene();
@@ -122,14 +123,19 @@ function initGraphics() {
 	scene.add(DLightHelper);
 	const DLightShadowHelper = new THREE.CameraHelper(light.shadow.camera);
 	scene.add(DLightShadowHelper);
+
+
+	const gridHelper = new THREE.GridHelper(300, 10);
+	scene.add(gridHelper);
 	//----------------------------------------------
 
 	// Reload assets
 	window.addEventListener("keydown", function (event) {
 		if (event.key === "r") {
-			cubeTestModel.visible = true;
-			Bird();
-			cubeTestModel.position.set(0, 0, 90);
+			//cubeTestModel.visible = true;
+			scene.remove(ballBody);
+      scene.remove(cubeTestModel);
+      Bird();
 		}
 	});
 
@@ -552,7 +558,7 @@ function throwball(startPosition) {
 	direction.normalize();
 	const distance = startPosition.distanceTo(targetPosition);
 	quat.set(0, 0, 0, 1);
-	const ballBody = createRigidBody(cubeTestModel, ballShape, ballMass, pos, quat);
+	 ballBody = createRigidBody(cubeTestModel, ballShape, ballMass, pos, quat);
 
 	function Run() {
 		speed = distance * 1.5;
@@ -561,6 +567,8 @@ function throwball(startPosition) {
 		ballBody.setLinearVelocity(
 			new Ammo.btVector3(direction.x, direction.y, direction.z)
 		); // Set the velocity in the physics world
+
+
 	}
 	Run();
 }
@@ -568,7 +576,7 @@ function throwball(startPosition) {
 
 window.addEventListener("click", (event) => {
 	if (draggable) {
-		console.log("dropping draggable");
+	//	console.log("dropping draggable");
 		if (draggable.name == "CubeTest") {
 			//draggable.visible = false;
 			let startPosition = new THREE.Vector3(
@@ -594,7 +602,7 @@ window.addEventListener("click", (event) => {
 		while (draggable.parent && draggable.parent.type !== "Scene") {
 			draggable = draggable.parent; // Tìm đối tượng gốc
 		}
-		console.log(found[0].object);
+		//console.log(found[0].object);
 
 	}
 });
@@ -605,17 +613,19 @@ window.addEventListener("mousemove", (event) => {
 });
 
 function dragObject() {
-	if (draggable != null && draggable.name == "CubeTest") {
+	if (draggable && draggable.name === "CubeTest") {
 		raycaster.setFromCamera(MoveMouse, camera);
 		const found = raycaster.intersectObjects(scene.children);
 		if (found.length > 0) {
-			for (let o of found) {
-				draggable.position.x = o.point.x;
+			const o = found[0];
+			const targetZ = Math.max(o.point.z, 70);
 
-				draggable.position.z = (o.point.z > 60) ? o.point.z : 60;
-				draggable.position.y = 0;
-			}
-
+			draggable.position.x = THREE.MathUtils.lerp(draggable.position.x, o.point.x, 0.1);
+			draggable.position.z = THREE.MathUtils.lerp(draggable.position.z, targetZ, 0.1);
+	
+			
+			draggable.position.y = 0;
+		}
 			function CurveCreate() {
 				const pointsForCurver = [];
 				const numPoints = 20;
@@ -643,15 +653,16 @@ function dragObject() {
 				const v0z = SpeedForce * (ACzx / ACxz) * (ACxyz / SpeedDistance);
 
 				for (let i = 0; i <= numPoints; ++i) {
-					const t = i;
+					//const t = i;
 
 					let x;
-					if (draggable.position.x >= 0) x = -v0x * t + draggable.position.x;
-					else x = v0x * t + draggable.position.x;
-					const y =
-						v0y * t - 0.5 * gravityConstant * t * t + draggable.position.y;
 
-					const z = -v0z * t + draggable.position.z;
+					x = (draggable.position.x > 0) ? (-v0x * i + draggable.position.x) : (x = v0x * i + draggable.position.x);
+
+
+					const y =  v0y * i - 0.5 * gravityConstant * i * i + draggable.position.y;
+
+					const z = -v0z * i + draggable.position.z;
 
 					pointsForCurver.push(new THREE.Vector3(x, y, z));
 				}
@@ -668,12 +679,12 @@ function dragObject() {
 				scene.add(splineObject);
 				setTimeout(() => {
 					scene.remove(splineObject);
-				}, 10);
+				}, 4);
 			}
 			CurveCreate();
 		}
 	}
-}
+
 
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
