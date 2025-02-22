@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>My first three.js app</title>
+    <style>
+        body {
+            margin: 0;
+            /* padding: 0; */
+            overflow: hidden;
+
+        }
+
+        .webgl {
+            display: none;
+        }
+    </style>
+
+    <script type="importmap">
+                {
+                "imports": {
+                    "three": "https://cdn.jsdelivr.net/npm/three@v0.149.0/build/three.module.js",
+                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.149.0/examples/jsm/",
+                    "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+                }
+                }
+            </script>
+
+
+</head>
+
+<body>
+    <div id="container"></div>
+    <!-- <script src="../node_modules/three/examples/jsm/libs/ammo.wasm.js"></script> -->
+    <h1 style="display: none;">hello world!</h1>
+    <!-- <video id="nightVideo" src="./src/mp4/night.mp4" style="display:none;"></video>
+    <video id="sunVideo" src="./src/mp4/SunSurface.mp4" style="display:none;"></video> -->
+    <!-- //<canvas class="webgl"></canvas> -->
+    <!-- <script type="module" src="./src/player.js"></script> -->
+    <script type="module" src="./src/main.js"></script>
+
+    <!-- <h1>no 3d</h1> -->
+
+
+
+</body>
+
+</html>
