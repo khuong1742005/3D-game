@@ -6,6 +6,13 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 
 
+//game stats
+let point = 0;
+let multiDamage = 1;
+
+
+
+
 const clock = new THREE.Clock();
 
 // Tạo scene
@@ -82,7 +89,7 @@ loader.load('./src/assets/road.glb', function (gltf) {
 let soldierModel;
 let mixer, runAction;
 let moveLeft = false, moveRight = false;
-const moveSpeed = 0.005;
+const moveSpeed = 0.035;
 loader.load('./src/assets/Soldier.glb', function (gltf) {
 
     soldierModel = gltf.scene;
@@ -108,7 +115,7 @@ loader.load('./src/assets/Soldier.glb', function (gltf) {
 
 // Obstacle
 const obstacleModel = [];
-const obstacleCount = 1000;
+const obstacleCount = 10;
 loader.load('./src/assets/chai.glb', function (gltf) {
     for (let i = 0; i < obstacleCount; i++) {
         const obstacle = gltf.scene.clone();
@@ -118,7 +125,7 @@ loader.load('./src/assets/chai.glb', function (gltf) {
 
         obstacle.position.set(randomX, 0.2, -i * 2);
         obstacle.scale.set(0.1, 0.1, 0.07);
-        obstacle.rotation.y = Math.PI / 2;
+        obstacle.rotation.x = Math.PI / 2 ;
         const glassMaterial = new THREE.MeshPhysicalMaterial({
             color: 0xff4169e1,
             transparent: true,
@@ -138,10 +145,83 @@ loader.load('./src/assets/chai.glb', function (gltf) {
     }
 });
 
+const portalModel = [];
+const portalCount = 10;
+
+loader.load('./src/assets/Portal.glb', function (gltf) {
+    const maxPortals = 2;
+    let generatedPortals = 0;
+    let validPositions = [];
+
+    // Tạo danh sách vị trí hợp lệ
+    for (let i = 0; i < maxPortals * 5; i++) { // Tăng số lần thử để đảm bảo có đủ vị trí
+        const randomX = Math.random() < 0.5 ? 0.3 : -0.3;
+        const randomZ = -i; // Giữ khoảng cách trên trục Z
+
+        let isValid = true;
+
+        // Tạo Box3 giả định cho portal
+        const tempPortal = new THREE.Object3D();
+        tempPortal.position.set(randomX, 0.1, randomZ);
+        const portalBox = new THREE.Box3().setFromObject(tempPortal);
+
+        // Kiểm tra không chạm vào obstacleModel
+        for (const obstacle of obstacleModel) {
+            const obstacleBox = new THREE.Box3().setFromObject(obstacle);
+            if (portalBox.intersectsBox(obstacleBox)) {
+                isValid = false;
+                break;
+            }
+        }
+
+        // Kiểm tra không chạm với các portal đã chọn trước đó
+        for (const pos of validPositions) {
+            const existingBox = new THREE.Box3().setFromObject(new THREE.Object3D());
+            existingBox.setFromCenterAndSize(new THREE.Vector3(pos.x, 0.1, pos.z), new THREE.Vector3(0.1, 0.1, 0.07));
+            if (portalBox.intersectsBox(existingBox)) {
+                isValid = false;
+                break;
+            }
+        }
+
+        if (isValid) {
+            validPositions.push({ x: randomX, z: randomZ });
+            if (validPositions.length >= maxPortals) break; // Đủ vị trí thì dừng
+        }
+    }
+
+    // Tạo portal từ danh sách vị trí hợp lệ
+    validPositions.forEach(pos => {
+        const portal = gltf.scene.clone();
+        portal.position.set(pos.x, 0.1, pos.z);
+        portal.scale.set(0.1, 0.1, 0.07);
+        portal.rotation.y = Math.PI / 2;
+
+        // Áp dụng material
+        const glassMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xff4169e1,
+            transparent: true,
+            opacity: 0.9,
+            emissive: 0xff4169e1,
+            emissiveIntensity: 1.5,
+        });
+
+        portal.traverse((child) => {
+            if (child.isMesh) {
+                child.material = glassMaterial;
+            }
+        });
+
+        scene.add(portal);
+        portalModel.push(portal);
+    });
+});
+
+
 const numberPoint = [];
 const fontLoader = new FontLoader();
 let loadedFont;
-fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
+fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font) {
     loadedFont = font;
     obstacleModel.forEach((o, i) => {
         const randomNumber = Math.floor(Math.random() * 100) + 1;
@@ -150,6 +230,7 @@ fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.
             size: 0.1,
             height: 0.01,
         });
+        
 
         const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
         const textMesh = new THREE.Mesh(textGeometry, textMaterial);
@@ -159,7 +240,46 @@ fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.
         scene.add(textMesh);
         numberPoint.push(textMesh);
     });
+    portalModel.forEach((o, i) => {
+        const randomNumber = -Math.floor(Math.random() * 150) + 1;
+        const textGeometry = new TextGeometry(`${randomNumber}`, {
+            font: font,
+            size: 0.1,
+            height: 0.01,
+        });
+        
+
+        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+
+        textMesh.position.set(o.position.x - 0.03, o.position.y + 0.2, o.position.z);
+        textMesh.userData.textValue = randomNumber;
+        scene.add(textMesh);
+        numberPoint.push(textMesh);
+    });
 });
+
+//font for Portal
+// fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font) {
+//     loadedFont = font;
+//     portalModel.forEach((o, i) => {
+//         const randomNumber = -Math.floor(Math.random() * 150) + 1;
+//         const textGeometry = new TextGeometry(`${randomNumber}`, {
+//             font: font,
+//             size: 0.1,
+//             height: 0.01,
+//         });
+        
+
+//         const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+//         const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+
+//         textMesh.position.set(o.position.x - 0.03, o.position.y + 0.2, o.position.z);
+//         textMesh.userData.textValue = randomNumber;
+//         scene.add(textMesh);
+//         numberPoint.push(textMesh);
+//     });
+// });
 
 // Event
 let isMoving = true;
@@ -226,53 +346,113 @@ function startShooting() {
 }
 
 function checkCollision() {
-    if (!obstacleModel || !soldierModel || !bullets) return;
+    if (!obstacleModel || !soldierModel || !bullets || !portalModel) return;
 
+    const soldierBox = new THREE.Box3().setFromObject(soldierModel).expandByScalar(-0.03);
+
+    // 🔹 Kiểm tra va chạm với obstacleModel
     for (let i = obstacleModel.length - 1; i >= 0; i--) {
         const o = obstacleModel[i];
-        const obstacleBox = new THREE.Box3().setFromObject(o);
-        const soldierBox = new THREE.Box3().setFromObject(soldierModel);
-        obstacleBox.expandByScalar(-0.06); // Giảm kích thước box 20%
-        soldierBox.expandByScalar(-0.03);
+        const obstacleBox = new THREE.Box3().setFromObject(o).expandByScalar(-0.06);
 
-        // Kiểm tra va chạm với từng viên đạn
+        // Kiểm tra va chạm với đạn
         for (let j = bullets.length - 1; j >= 0; j--) {
-            const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh);
-            bulletBox.expandByScalar(0.03);
-
+            const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh).expandByScalar(0.03);
             if (bulletBox.intersectsBox(obstacleBox)) {
-                numberPoint[i].userData.textValue--;
-                if (numberPoint[i]) { // Kiểm tra trước khi xóa
-                    console.log(numberPoint[i].userData.textValue);
-                    scene.remove(bullets[j].mesh);
-                    bullets.splice(j, 1); // Xóa viên đạn khỏi mảng
+                numberPoint[i].userData.textValue-= multiDamage;
 
-                    scene.remove(numberPoint[i]); // Xóa số cũ
-                    const newTextGeometry = new TextGeometry(`${numberPoint[i].userData.textValue}`, {
-                        font: loadedFont,
-                        size: 0.1,
-                        height: 0.01,
-                    });
-                    numberPoint[i].geometry = newTextGeometry; // Gán lại geometry mới
-                    scene.add(numberPoint[i]);
+                scene.remove(bullets[j].mesh);
+                bullets.splice(j, 1);
 
-                    if (numberPoint[i].userData.textValue == 0) {
-                        scene.remove(o);
-                        obstacleModel.splice(i, 1); // Xóa chướng ngại vật khỏi mảng
-                        scene.remove(numberPoint[i]);
-                        numberPoint.splice(i, 1);
-                        break;
-                    }
+                scene.remove(numberPoint[i]); // Xóa số cũ
+                const newTextGeometry = new TextGeometry(`${numberPoint[i].userData.textValue}`, {
+                    font: loadedFont,
+                    size: 0.1,
+                    height: 0.01,
+                });
+                numberPoint[i].geometry = newTextGeometry;
+                scene.add(numberPoint[i]);
+
+                if (numberPoint[i].userData.textValue <= 0) {
+                    point++;
+                    document.getElementById("point").textContent = point;
+                    scene.remove(o);
+                    obstacleModel.splice(i, 1);
+                    scene.remove(numberPoint[i]);
+                    numberPoint.splice(i, 1);
+                    break;
                 }
-                break; // Thoát vòng lặp khi đã xóa
+                break;
             }
         }
 
         // Kiểm tra va chạm giữa soldier và chướng ngại vật
         if (obstacleBox.intersectsBox(soldierBox)) {
+            console.log(123)
             isMoving = false;
         }
     }
+
+
+
+    // 🔹 Kiểm tra va chạm với portalModel (THÊM XỬ LÝ XÓA SỐ)
+    for (let i = portalModel.length - 1; i >= 0; i--) {
+        const portal = portalModel[i];
+        const portalBox = new THREE.Box3().setFromObject(portal).expandByScalar(0.06);
+        // debugBoundingBox(portalBox, 0x00ff00);  // Portal Box: Màu xanh
+        // debugBoundingBox(soldierBox, 0xff0000); // Soldier Box: Màu đỏ
+        // Kiểm tra va chạm với từng viên đạn
+        for (let j = bullets.length - 1; j >= 0; j--) {
+            const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh).expandByScalar(0.03);
+            if (bulletBox.intersectsBox(portalBox)) {
+                numberPoint[i + obstacleModel.length].userData.textValue+=multiDamage;
+
+                scene.remove(bullets[j].mesh);
+                bullets.splice(j, 1);
+
+                scene.remove(numberPoint[i + obstacleModel.length]); // Xóa số cũ
+                const newTextGeometry = new TextGeometry(`${numberPoint[i + obstacleModel.length].userData.textValue}`, {
+                    font: loadedFont,
+                    size: 0.1,
+                    height: 0.01,
+                });
+                numberPoint[i + obstacleModel.length].geometry = newTextGeometry;
+                scene.add(numberPoint[i + obstacleModel.length]);
+
+                // if (numberPoint[i + obstacleModel.length].userData.textValue == 0) {
+                    // point++;
+                    // document.getElementById("point").textContent = point;
+                    // scene.remove(portal);
+                    // portalModel.splice(i, 1);
+                    // scene.remove(numberPoint[i + obstacleModel.length]);
+                    // numberPoint.splice(i + obstacleModel.length, 1);
+                    // break;
+                // }
+                // break;
+            }
+            
+        }
+        if (portalBox.intersectsBox(soldierBox)) {
+            multiDamage += numberPoint[i + obstacleModel.length].userData.textValue;
+            multiDamage = Math.max(multiDamage, 1); // Tối đa 100 damage
+            document.getElementById("DM").textContent = multiDamage;
+            
+            scene.remove(portal);
+                    portalModel.splice(i, 1);
+                    scene.remove(numberPoint[i + obstacleModel.length]);
+                    numberPoint.splice(i + obstacleModel.length, 1);
+            console.log("Soldier entered the portal!");
+            break;
+            // Thêm hành động nếu soldier đi qua portal (dịch chuyển, hiệu ứng, v.v.)
+        }
+        // Kiểm tra va chạm giữa soldier và portal
+        
+    }
+}
+
+function debugBoundingBox(box, color = 0xff0000) {
+    const helper = new THREE.Box3Helper(box, color);
+    scene.add(helper);
 }
 
 // Animation loop
@@ -285,6 +465,10 @@ function animate() {
         obstacleModel.forEach(ob => {
             ob.position.z += 0.01; // Di chuyển về phía trước
         });
+        portalModel.forEach(portal => {
+            portal.position.z += 0.01; // Di chuyển về phía trước
+        });
+
         numberPoint.forEach(np => {
             np.position.z += 0.01; // Di chuyển về phía trước
         });
