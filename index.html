@@ -4,18 +4,8 @@
 <head>
     <meta charset="utf-8">
     <title>My first three.js app</title>
-    <style>
-        body {
-            margin: 0;
-            /* padding: 0; */
-            overflow: hidden;
-
-        }
-
-        .webgl {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 
     <script type="importmap">
                 {
@@ -31,6 +21,14 @@
 </head>
 
 <body>
+    <div class="stats-bar">
+        <div id="point-bar">
+            <p>Score: <span id="point">0</span></p>
+        </div>
+        <div class="damage-mul">
+            <p>Damage Multiplier: X<span id="DM">1</span></p>
+        </div>
+    </div>
     <div id="container"></div>
     <!-- <script src="../node_modules/three/examples/jsm/libs/ammo.wasm.js"></script> -->
     <h1 style="display: none;">hello world!</h1>
