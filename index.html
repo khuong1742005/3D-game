@@ -12,7 +12,8 @@
                 "imports": {
                     "three": "https://cdn.jsdelivr.net/npm/three@v0.149.0/build/three.module.js",
                     "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.149.0/examples/jsm/",
-                    "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+                    "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js",
+                    "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@v0.149.0/examples/jsm/"
                 }
                 }
             </script>
@@ -28,6 +29,12 @@
         <div class="damage-mul">
             <p>Damage Multiplier: X<span id="DM">1</span></p>
         </div>
+    </div>
+
+
+    <div class="replay">
+        <div class="score"></div>
+        <button onclick="location.reload()">Replay</button>
     </div>
     <div id="container"></div>
     <!-- <script src="../node_modules/three/examples/jsm/libs/ammo.wasm.js"></script> -->
