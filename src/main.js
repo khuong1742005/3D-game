@@ -108,7 +108,7 @@ loader.load('./src/assets/Soldier.glb', function (gltf) {
 
 // Obstacle
 const obstacleModel = [];
-const obstacleCount = 1000;
+const obstacleCount = 10;
 loader.load('./src/assets/chai.glb', function (gltf) {
     for (let i = 0; i < obstacleCount; i++) {
         const obstacle = gltf.scene.clone();
