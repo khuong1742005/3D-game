@@ -314,7 +314,7 @@ function shootBullet(model, posZ, name) {
     const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
 
     // Lấy vị trí hiện tại của soldier
-    bullet.position.set(model.position.x , model.position.y + ((name == 'soldier') ? 0.1 : 0), model.position.z - posZ);
+    bullet.position.set(model.position.x, model.position.y + ((name == 'soldier') ? 0.1 : 0), model.position.z - posZ);
 
     // Xác định hướng bắn (hướng nhìn của soldier)
     const direction = new THREE.Vector3();
@@ -331,7 +331,7 @@ function multiBullet(model, multiValue) {
     if (multiValue == "x2") {
         shootBullet(model, 0.2, 'bullet');
         shootBullet(model, 0.22, 'bullet');
-        
+
     }
     else if (multiValue == "x3") {
 
@@ -424,13 +424,13 @@ function checkCollision() {
 
         for (let j = 0; j <= bullets.length - 1; j++) {
             const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh).expandByScalar(-0.06);
-            
+
             // helper for bullet
             // const bulletBoxHelper = new THREE.Box3Helper(bulletBox, 0xff0000); // Màu đỏ
             // scene.add(bulletBoxHelper);
 
             if (bulletBox.intersectsBox(portalBox)) {
-                
+
                 scene.remove(bullets[j].mesh);
                 multiBullet(bullets[j].mesh, "x2");
                 console.log("spam" + j);
@@ -514,4 +514,3 @@ function animate() {
 
 }
 animate();
-
