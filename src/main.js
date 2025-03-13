@@ -152,9 +152,9 @@ loader.load('./src/assets/chai.glb', function (gltf) {
 
 let mixerMonsters = [];
 let monsterModels = [];
-
+let monsters = 10;
 loader.load('./src/assets/monter_run1.glb', function(gltf) {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < monsters; i++) {
         const randomX = Math.random() < 0.5 ? 0.3 : -0.3;
         // Clone model bằng SkeletonUtils để đảm bảo clone đúng skeleton
         const model = SkeletonUtils.clone(gltf.scene);
@@ -262,7 +262,9 @@ const fontLoader = new FontLoader();
 let loadedFont;
 fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font) {
     loadedFont = font;
+    setTimeout(() => {
  //for portal
+ 
  portalModel.forEach((o, i) => {
     const randomNumber = -Math.floor(Math.random() * 150) + 1;
     const textGeometry = new TextGeometry(`${randomNumber}`, {
@@ -298,7 +300,7 @@ fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font)
         scene.add(textMesh);
         numberPoint.push(textMesh);
     });
-    
+}, 500);
    
 });
 
@@ -409,11 +411,12 @@ function checkCollision() {
         }
 
         // Kiểm tra va chạm giữa soldier và chướng ngại vật
-        if (obstacleBox.intersectsBox(soldierBox)) {
-            console.log(123)
+        if (obstacleBox.intersectsBox(soldierBox) || monsters == point) {
+            console.log(monsterModels.length)
             isMoving = false;
             document.querySelector('.replay').style.display = 'flex';
-
+            document.getElementById("score").textContent = point;
+            
         }
     }
 
@@ -439,17 +442,7 @@ function checkCollision() {
                 });
                 numberPoint[i].geometry = newTextGeometry;
                 scene.add(numberPoint[i]);
-
-                // if (numberPoint[i + obstacleModel.length].userData.textValue == 0) {
-                    // point++;
-                    // document.getElementById("point").textContent = point;
-                    // scene.remove(portal);
-                    // portalModel.splice(i, 1);
-                    // scene.remove(numberPoint[i + obstacleModel.length]);
-                    // numberPoint.splice(i + obstacleModel.length, 1);
-                    // break;
-                // }
-                // break;
+                
             }
             
         }
@@ -478,6 +471,8 @@ function debugBoundingBox(box, color = 0xff0000) {
 
 // Animation loop
 function animate() {
+
+
     requestAnimationFrame(animate);
     if (isMoving) {
         roads.forEach(road => {
