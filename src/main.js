@@ -329,8 +329,9 @@ function shootBullet(model, posZ, name) {
 function multiBullet(model, multiValue) {
     if (!soldierModel) return;
     if (multiValue == "x2") {
-        shootBullet(model, 0.05, 'bullet');
-        shootBullet(model, -0.05, 'bullet');
+        const randomPos = Math.random() * 0.1 - 0.05;
+        shootBullet(model, randomPos, 'bullet');
+        shootBullet(model, -randomPos, 'bullet');
 
     }
     else if (multiValue == "x3") {
