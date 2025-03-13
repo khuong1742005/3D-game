@@ -314,7 +314,7 @@ function shootBullet(model, posZ, name) {
     const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
 
     // Lấy vị trí hiện tại của soldier
-    bullet.position.set(model.position.x, model.position.y + ((name == 'soldier') ? 0.1 : 0), model.position.z - posZ);
+    bullet.position.set(((model.position.x - posZ) < -0.5) ? -0.5 : ((model.position.x - posZ) > 0) ? 0 : (model.position.x - posZ), model.position.y + ((name == 'soldier') ? 0.1 : 0), model.position.z - 0.2);
 
     // Xác định hướng bắn (hướng nhìn của soldier)
     const direction = new THREE.Vector3();
@@ -329,8 +329,8 @@ function shootBullet(model, posZ, name) {
 function multiBullet(model, multiValue) {
     if (!soldierModel) return;
     if (multiValue == "x2") {
-        shootBullet(model, 0.2, 'bullet');
-        shootBullet(model, 0.22, 'bullet');
+        shootBullet(model, 0.05, 'bullet');
+        shootBullet(model, -0.05, 'bullet');
 
     }
     else if (multiValue == "x3") {
@@ -475,13 +475,13 @@ function animate() {
         //     ob.position.z += 0.01; // Di chuyển về phía trước
         // });
 
-        portalModel.forEach(portal => {
-            portal.position.z += 0.01; // Di chuyển về phía trước
-        });
+        // portalModel.forEach(portal => {
+        //     portal.position.z += 0.01; // Di chuyển về phía trước
+        // });
 
-        numberPointPortal.forEach(portal => {
-            portal.position.z += 0.01;
-        })
+        // numberPointPortal.forEach(portal => {
+        //     portal.position.z += 0.01;
+        // })
 
         numberPoint.forEach(np => {
             np.position.z += 0.01; // Di chuyển về phía trước
