@@ -165,7 +165,7 @@ loader.load('./src/assets/monter_run1.glb', function (gltf) {
         scene.add(model);
 
         // Lưu lại model để di chuyển sau
-        monsterModels.push(model);
+        // monsterModels.push(model);
 
         // Tạo AnimationMixer cho monster này và lưu vào mảng mixerMonsters
         const mixer = new THREE.AnimationMixer(model);
@@ -314,7 +314,7 @@ function shootBullet(model, posZ, name) {
     const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
 
     // Lấy vị trí hiện tại của soldier
-    bullet.position.set(((model.position.x - posZ) < -0.5) ? -0.5 : ((model.position.x - posZ) > 0) ? 0 : (model.position.x - posZ), model.position.y + ((name == 'soldier') ? 0.1 : 0), model.position.z - 0.2);
+    bullet.position.set(((model.position.x - posZ) < -0.5) ? -0.5 : (model.position.x - posZ), model.position.y + ((name == 'soldier') ? 0.1 : 0), model.position.z - 0.2);
 
     // Xác định hướng bắn (hướng nhìn của soldier)
     const direction = new THREE.Vector3();
@@ -343,7 +343,7 @@ function updateBullets() {
         const bullet = bullets[i];
 
         // Cập nhật vị trí viên đạn
-        bullet.mesh.position.add(bullet.direction.clone().multiplyScalar(0.07));
+        bullet.mesh.position.add(bullet.direction.clone().multiplyScalar(0.01));
 
         // Xóa viên đạn nếu bay quá xa
         if (bullet.mesh.position.z < -10) {
@@ -358,7 +358,7 @@ function startShooting(model) {
         if (model) { // Kiểm tra xem model đã có chưa
             shootBullet(model, 0, 'soldier');
         }
-    }, 100); // Bắn mỗi 100ms (0.1 giây)
+    }, 1000); // Bắn mỗi 100ms (0.1 giây)
 }
 
 function checkCollision() {
