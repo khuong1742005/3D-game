@@ -111,7 +111,7 @@ loader.load('./src/assets/Soldier.glb', function (gltf) {
 
     runAction.play();
 
-    startShooting();
+    startShooting(soldierModel);
 });
 
 
@@ -142,7 +142,7 @@ loader.load('./src/assets/chai.glb', function (gltf) {
         //         child.material = glassMaterial;
         //     }
         // });
-        scene.add(obstacle);
+        // scene.add(obstacle);
         obstacleModel.push(obstacle);
 
 
@@ -154,10 +154,10 @@ let mixerMonsters = [];
 let monsterModels = [];
 
 let monsters = 10;
-loader.load('./src/assets/monter_run1.glb', function(gltf) {
+loader.load('./src/assets/monter_run1.glb', function (gltf) {
     for (let i = 0; i < monsters; i++) {
 
-        const randomX = Math.random() < 0.5 ? 0.3 : -0.3;
+        const randomX = -0.3;
         // Clone model bằng SkeletonUtils để đảm bảo clone đúng skeleton
         const model = SkeletonUtils.clone(gltf.scene);
         model.scale.set(0.24, 0.24, 0.24);
@@ -184,13 +184,13 @@ const portalCount = 10;
 
 
 loader.load('./src/assets/Portal.glb', function (gltf) {
-    const maxPortals = 2;
-    let generatedPortals = 0;
+    const maxPortals = 1;
     let validPositions = [];
 
     // Tạo danh sách vị trí hợp lệ
     for (let i = 0; i < maxPortals * 5; i++) { // Tăng số lần thử để đảm bảo có đủ vị trí
-        const randomX = Math.random() < 0.5 ? 0.3 : -0.3;
+        // const randomX = Math.random() < 0.5 ? 0.3 : -0.3;
+        const randomX = 0.3;
         const randomZ = -i; // Giữ khoảng cách trên trục Z
 
         let isValid = true;
@@ -198,32 +198,7 @@ loader.load('./src/assets/Portal.glb', function (gltf) {
         // Tạo Box3 giả định cho portal
         const tempPortal = new THREE.Object3D();
         tempPortal.position.set(randomX, 0.1, randomZ);
-        const portalBox = new THREE.Box3().setFromObject(tempPortal);
 
-        // Kiểm tra không chạm vào obstacleModel
-        const overlapThreshold = 0.1; // điều chỉnh giá trị này tùy vào kích thước model của bạn
-
-        for (const obstacle of obstacleModel) {
-            const dx = Math.abs(randomX - obstacle.position.x);
-            const dz = Math.abs(randomZ - obstacle.position.z);
-
-            if (dx < overlapThreshold && dz < overlapThreshold) {
-                isValid = false;
-
-                break;
-            }
-        }
-
-
-        // Kiểm tra không chạm với các portal đã chọn trước đó
-        for (const pos of validPositions) {
-            const existingBox = new THREE.Box3().setFromObject(new THREE.Object3D());
-            existingBox.setFromCenterAndSize(new THREE.Vector3(pos.x, 0.1, pos.z), new THREE.Vector3(0.1, 0.1, 0.07));
-            if (portalBox.intersectsBox(existingBox)) {
-                isValid = false;
-                break;
-            }
-        }
 
         if (isValid) {
             validPositions.push({ x: randomX, z: randomZ });
@@ -260,53 +235,51 @@ loader.load('./src/assets/Portal.glb', function (gltf) {
 
 
 const numberPoint = [];
+const numberPointPortal = [];
 const fontLoader = new FontLoader();
 let loadedFont;
 fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font) {
     loadedFont = font;
 
     setTimeout(() => {
- //for portal
- 
- portalModel.forEach((o, i) => {
-    const randomNumber = -Math.floor(Math.random() * 150) + 1;
-    const textGeometry = new TextGeometry(`${randomNumber}`, {
-        font: font,
-        size: 0.1,
-        height: 0.01,
-    });
 
+        portalModel.forEach((o, i) => {
+            const text = "x2";
+            const textGeometry = new TextGeometry(text, {
+                font: font,
+                size: 0.1,
+                height: 0.01,
+            });
 
+            const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
-        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-
-        textMesh.position.set(o.position.x - 0.03, o.position.y + 0.2, o.position.z);
-        textMesh.userData.textValue = randomNumber;
-        scene.add(textMesh);
-        numberPoint.push(textMesh);
-    });
-
-
-    //for monster
-    monsterModels.forEach((o, i) => {
-        const randomNumber = Math.floor(Math.random() * 100) + 1;
-        const textGeometry = new TextGeometry(`${randomNumber}`, {
-            font: font,
-            size: 0.1,
-            height: 0.01,
+            textMesh.position.set(o.position.x - 0.03, o.position.y + 0.2, o.position.z);
+            textMesh.userData.textValue = text;
+            scene.add(textMesh);
+            numberPointPortal.push(textMesh);
         });
-        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
-        textMesh.position.set(o.position.x - 0.03, o.position.y + 0.8, o.position.z);
-        textMesh.userData.textValue = randomNumber;
-        scene.add(textMesh);
-        numberPoint.push(textMesh);
-    });
 
-}, 500);
-   
+        //for monster
+        monsterModels.forEach((o, i) => {
+            const randomNumber = Math.floor(Math.random() * 100) + 1;
+            const textGeometry = new TextGeometry(`${randomNumber}`, {
+                font: font,
+                size: 0.1,
+                height: 0.01,
+            });
+            const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+
+            textMesh.position.set(o.position.x - 0.03, o.position.y + 0.8, o.position.z);
+            textMesh.userData.textValue = randomNumber;
+            scene.add(textMesh);
+            numberPoint.push(textMesh);
+        });
+
+    }, 500);
+
 
 });
 
@@ -332,8 +305,8 @@ document.addEventListener("keyup", (event) => {
 // Bullets
 const bullets = []; // Mảng chứa các viên đạn
 
-function shootBullet() {
-    if (!soldierModel) return;
+function shootBullet(model, posZ) {
+    if (!model) return;
 
     // Tạo viên đạn (hình cầu nhỏ)
     const bulletGeometry = new THREE.SphereGeometry(0.1, 1, 1);
@@ -341,7 +314,7 @@ function shootBullet() {
     const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
 
     // Lấy vị trí hiện tại của soldier
-    bullet.position.set(soldierModel.position.x, soldierModel.position.y + 0.1, soldierModel.position.z - 0.02);
+    bullet.position.set(model.position.x, model.position.y + 0.1, model.position.z - 0.02 - posZ);
 
     // Xác định hướng bắn (hướng nhìn của soldier)
     const direction = new THREE.Vector3();
@@ -352,12 +325,22 @@ function shootBullet() {
     scene.add(bullet);
 }
 
+function multiBullet(model, multiValue) {
+    if (!soldierModel) return;
+    if (multiValue == "x2") {
+        shootBullet(model, 0.3);
+    }
+    else if (multiValue == "x3") {
+
+    }
+}
+
 function updateBullets() {
     for (let i = 0; i < bullets.length; i++) {
         const bullet = bullets[i];
 
         // Cập nhật vị trí viên đạn
-        bullet.mesh.position.add(bullet.direction.clone().multiplyScalar(0.2));
+        bullet.mesh.position.add(bullet.direction.clone().multiplyScalar(0.04));
 
         // Xóa viên đạn nếu bay quá xa
         if (bullet.mesh.position.z < -10) {
@@ -367,12 +350,12 @@ function updateBullets() {
         }
     }
 }
-function startShooting() {
+function startShooting(model) {
     setInterval(() => {
-        if (soldierModel) { // Kiểm tra xem model đã có chưa
-            shootBullet();
+        if (model) { // Kiểm tra xem model đã có chưa
+            shootBullet(model, 0);
         }
-    }, 100); // Bắn mỗi 100ms (0.1 giây)
+    }, 1000); // Bắn mỗi 100ms (0.1 giây)
 }
 
 function checkCollision() {
@@ -389,26 +372,26 @@ function checkCollision() {
         for (let j = bullets.length - 1; j >= 0; j--) {
             const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh).expandByScalar(0.03);
             if (bulletBox.intersectsBox(obstacleBox)) {
-                numberPoint[i + portalModel.length].userData.textValue -= multiDamage;
+                numberPoint[i].userData.textValue -= multiDamage;
 
                 scene.remove(bullets[j].mesh);
                 bullets.splice(j, 1);
 
-                scene.remove(numberPoint[i + portalModel.length]); // Xóa số cũ
-                const newTextGeometry = new TextGeometry(`${numberPoint[i + portalModel.length].userData.textValue}`, {
+                scene.remove(numberPoint[i]); // Xóa số cũ
+                const newTextGeometry = new TextGeometry(`${numberPoint[i].userData.textValue}`, {
                     font: loadedFont,
                     size: 0.1,
                     height: 0.01,
                 });
-                numberPoint[i + portalModel.length].geometry = newTextGeometry;
-                scene.add(numberPoint[i + portalModel.length]);
+                numberPoint[i].geometry = newTextGeometry;
+                scene.add(numberPoint[i]);
 
-                if (numberPoint[i + portalModel.length].userData.textValue <= 0) {
+                if (numberPoint[i].userData.textValue <= 0) {
                     point++;
                     document.getElementById("point").textContent = point;
                     scene.remove(o);
                     monsterModels.splice(i, 1);
-                    scene.remove(numberPoint[i + portalModel.length]);
+                    scene.remove(numberPoint[i]);
                     numberPoint.splice(i, 1);
                     break;
                 }
@@ -422,7 +405,7 @@ function checkCollision() {
             isMoving = false;
             document.querySelector('.replay').style.display = 'flex';
             document.getElementById("score").textContent = point;
-            
+
         }
     }
 
@@ -431,35 +414,27 @@ function checkCollision() {
     // 🔹 Kiểm tra va chạm với portalModel (THÊM XỬ LÝ XÓA SỐ)
     for (let i = portalModel.length - 1; i >= 0; i--) {
         const portal = portalModel[i];
-        const portalBox = new THREE.Box3().setFromObject(portal).expandByScalar(0.06);
+        const portalBox = new THREE.Box3().setFromObject(portal).expandByScalar(0.01);
         for (let j = bullets.length - 1; j >= 0; j--) {
-            const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh).expandByScalar(0.03);
+            const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh).expandByScalar(0.01);
             if (bulletBox.intersectsBox(portalBox)) {
-                numberPoint[i].userData.textValue += multiDamage;
-
-                scene.remove(bullets[j].mesh);
-                bullets.splice(j, 1);
-
-                scene.remove(numberPoint[i]); // Xóa số cũ
-                const newTextGeometry = new TextGeometry(`${numberPoint[i].userData.textValue}`, {
-                    font: loadedFont,
-                    size: 0.1,
-                    height: 0.01,
-                });
-                numberPoint[i].geometry = newTextGeometry;
-                scene.add(numberPoint[i]);
+                multiBullet(portal, "x2");
+                // if (numberPointPortal[numberPointPortal.length - 1].userData.textValue == "x2") {
+                //     // bullet.position.set(soldierModel.position.x, soldierModel.position.y + 0.1, soldierModel.position.z - 0.02);
+                // }
             }
 
         }
         if (portalBox.intersectsBox(soldierBox)) {
-            multiDamage += numberPoint[i].userData.textValue;
+            multiDamage += numberPointPortal[i].userData.textValue;
+            // console.log(numberPointPortal[i].userData.textValue);
             multiDamage = Math.max(multiDamage, 1); // Tối đa 100 damage
             document.getElementById("DM").textContent = multiDamage;
 
             scene.remove(portal);
             portalModel.splice(i, 1);
-            scene.remove(numberPoint[i]);
-            numberPoint.splice(i, 1);
+            scene.remove(numberPointPortal[i]);
+            numberPointPortal.splice(i, 1);
             console.log("Soldier entered the portal!");
             break;
             // Thêm hành động nếu soldier đi qua portal (dịch chuyển, hiệu ứng, v.v.)
@@ -486,9 +461,13 @@ function animate() {
         // obstacleModel.forEach(ob => {
         //     ob.position.z += 0.01; // Di chuyển về phía trước
         // });
-        portalModel.forEach(portal => {
-            portal.position.z += 0.01; // Di chuyển về phía trước
-        });
+        // portalModel.forEach(portal => {
+        //     portal.position.z += 0.01; // Di chuyển về phía trước
+        // });
+
+        // numberPointPortal.forEach(portal => {
+        //     portal.position.z += 0.01;
+        // })
 
         numberPoint.forEach(np => {
             np.position.z += 0.01; // Di chuyển về phía trước
