@@ -106,7 +106,7 @@ loader.load('./src/assets/Soldier.glb', function (gltf) {
     const animations = gltf.animations;
 
     mixer = new THREE.AnimationMixer(soldierModel);
- 
+
     runAction = mixer.clipAction(animations[1]);  // Run
 
     runAction.play();
@@ -117,7 +117,7 @@ loader.load('./src/assets/Soldier.glb', function (gltf) {
 
 // Obstacle
 const obstacleModel = [];
-const obstacleCount = 0;
+const obstacleCount = 1000;
 loader.load('./src/assets/chai.glb', function (gltf) {
     for (let i = 0; i < obstacleCount; i++) {
         const obstacle = gltf.scene.clone();
@@ -127,7 +127,7 @@ loader.load('./src/assets/chai.glb', function (gltf) {
 
         obstacle.position.set(randomX, 0.2, -i * 2);
         obstacle.scale.set(0.1, 0.1, 0.07);
-        obstacle.rotation.x = Math.PI / 2 ;
+        obstacle.rotation.x = Math.PI / 2;
         // const glassMaterial = new THREE.MeshPhysicalMaterial({
         //     color: 0xff4169e1,
         //     transparent: true,
@@ -145,16 +145,18 @@ loader.load('./src/assets/chai.glb', function (gltf) {
         scene.add(obstacle);
         obstacleModel.push(obstacle);
 
-        
+
     }
 });
 
 
 let mixerMonsters = [];
 let monsterModels = [];
+
 let monsters = 10;
 loader.load('./src/assets/monter_run1.glb', function(gltf) {
     for (let i = 0; i < monsters; i++) {
+
         const randomX = Math.random() < 0.5 ? 0.3 : -0.3;
         // Clone model bằng SkeletonUtils để đảm bảo clone đúng skeleton
         const model = SkeletonUtils.clone(gltf.scene);
@@ -204,14 +206,14 @@ loader.load('./src/assets/Portal.glb', function (gltf) {
         for (const obstacle of obstacleModel) {
             const dx = Math.abs(randomX - obstacle.position.x);
             const dz = Math.abs(randomZ - obstacle.position.z);
-            
+
             if (dx < overlapThreshold && dz < overlapThreshold) {
                 isValid = false;
-    
+
                 break;
             }
         }
-        
+
 
         // Kiểm tra không chạm với các portal đã chọn trước đó
         for (const pos of validPositions) {
@@ -262,6 +264,7 @@ const fontLoader = new FontLoader();
 let loadedFont;
 fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font) {
     loadedFont = font;
+
     setTimeout(() => {
  //for portal
  
@@ -272,17 +275,18 @@ fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font)
         size: 0.1,
         height: 0.01,
     });
-    
 
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
-    textMesh.position.set(o.position.x - 0.03, o.position.y + 0.2, o.position.z);
-    textMesh.userData.textValue = randomNumber;
-    scene.add(textMesh);
-    numberPoint.push(textMesh);
-});
-    
+
+        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+
+        textMesh.position.set(o.position.x - 0.03, o.position.y + 0.2, o.position.z);
+        textMesh.userData.textValue = randomNumber;
+        scene.add(textMesh);
+        numberPoint.push(textMesh);
+    });
+
 
     //for monster
     monsterModels.forEach((o, i) => {
@@ -300,8 +304,10 @@ fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font)
         scene.add(textMesh);
         numberPoint.push(textMesh);
     });
+
 }, 500);
    
+
 });
 
 
@@ -383,7 +389,7 @@ function checkCollision() {
         for (let j = bullets.length - 1; j >= 0; j--) {
             const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh).expandByScalar(0.03);
             if (bulletBox.intersectsBox(obstacleBox)) {
-                numberPoint[i + portalModel.length].userData.textValue-= multiDamage;
+                numberPoint[i + portalModel.length].userData.textValue -= multiDamage;
 
                 scene.remove(bullets[j].mesh);
                 bullets.splice(j, 1);
@@ -429,7 +435,7 @@ function checkCollision() {
         for (let j = bullets.length - 1; j >= 0; j--) {
             const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh).expandByScalar(0.03);
             if (bulletBox.intersectsBox(portalBox)) {
-                numberPoint[i].userData.textValue+=multiDamage;
+                numberPoint[i].userData.textValue += multiDamage;
 
                 scene.remove(bullets[j].mesh);
                 bullets.splice(j, 1);
@@ -442,25 +448,24 @@ function checkCollision() {
                 });
                 numberPoint[i].geometry = newTextGeometry;
                 scene.add(numberPoint[i]);
-                
             }
-            
+
         }
         if (portalBox.intersectsBox(soldierBox)) {
             multiDamage += numberPoint[i].userData.textValue;
             multiDamage = Math.max(multiDamage, 1); // Tối đa 100 damage
             document.getElementById("DM").textContent = multiDamage;
-            
+
             scene.remove(portal);
-                    portalModel.splice(i, 1);
-                    scene.remove(numberPoint[i]);
-                    numberPoint.splice(i, 1);
+            portalModel.splice(i, 1);
+            scene.remove(numberPoint[i]);
+            numberPoint.splice(i, 1);
             console.log("Soldier entered the portal!");
             break;
             // Thêm hành động nếu soldier đi qua portal (dịch chuyển, hiệu ứng, v.v.)
         }
         // Kiểm tra va chạm giữa soldier và portal
-        
+
     }
 }
 
@@ -513,7 +518,7 @@ function animate() {
 
     // Cập nhật mixer của monster
     mixerMonsters.forEach(mixer => mixer.update(delta));
-    
+
 }
 animate();
 
