@@ -153,63 +153,58 @@ loader.load('./src/assets/Soldier.glb', function (gltf) {
 let mixerMonsters = [];
 let monsterModels = [];
 
-let monsters = 10;
+const totalGroups = 5; // Số nhóm quái
+const monstersPerGroup = 20; // Số quái trong mỗi nhóm
+
 loader.load('./src/assets/monter_run1.glb', function (gltf) {
-    for (let i = 0; i < monsters; i++) {
+    for (let groupIndex = 0; groupIndex < totalGroups; groupIndex++) {
+        // Xác định vị trí cơ bản của nhóm trên trục Z
+        const baseZ = -5;
 
-        const randomX = -0.3;
-        // Clone model bằng SkeletonUtils để đảm bảo clone đúng skeleton
-        const model = SkeletonUtils.clone(gltf.scene);
-        model.scale.set(0.1, 0.1, 0.1);
-        model.position.set(randomX, 0.1, -4 - i * 2);  // Cách nhau theo trục Z
-        scene.add(model);
+        for (let i = 0; i < monstersPerGroup; i++) {
+            // Tạo vị trí ngẫu nhiên trong phạm vi nhất định
+            const randomX = Math.random() * (0 + 0.5) - 0.5;
+            const randomZ = baseZ + (Math.random() - 0.5) * 3; // Z lệch nhẹ trong nhóm
 
-        // Lưu lại model để di chuyển sau
-        monsterModels.push(model);
+            // Clone model bằng SkeletonUtils
+            const model = SkeletonUtils.clone(gltf.scene);
+            model.scale.set(0.1, 0.1, 0.1);
+            model.position.set(randomX, 0.1, randomZ); // Giới hạn Y, X và Z tùy chọn
+            scene.add(model);
 
-        // Tạo AnimationMixer cho monster này và lưu vào mảng mixerMonsters
-        const mixer = new THREE.AnimationMixer(model);
-        mixerMonsters.push(mixer);
+            // Lưu lại model để di chuyển sau
+            monsterModels.push(model);
 
-        const clips = gltf.animations;
-        if (clips.length > 0) {
-            const action = mixer.clipAction(clips[0]);
-            action.play();
+            // Tạo AnimationMixer cho monster này và lưu vào mảng mixerMonsters
+            const mixer = new THREE.AnimationMixer(model);
+            mixerMonsters.push(mixer);
+
+            const clips = gltf.animations;
+            if (clips.length > 0) {
+                const action = mixer.clipAction(clips[0]);
+                action.play();
+            }
         }
     }
 });
 
 const portalModel = [];
-const portalCount = 10;
-
 
 loader.load('./src/assets/Portal.glb', function (gltf) {
-    const maxPortals = 2;
-    let validPositions = [];
-
+    const maxPortals = 1;
     // Tạo danh sách vị trí hợp lệ
-    for (let i = 0; i < maxPortals * 5; i++) { // Tăng số lần thử để đảm bảo có đủ vị trí
+    for (let i = 0; i < maxPortals; i++) {
         // const randomX = Math.random() < 0.5 ? 0.3 : -0.3;
         const randomX = -0.3;
         const randomZ = -i; // Giữ khoảng cách trên trục Z
-
-        let isValid = true;
 
         // Tạo Box3 giả định cho portal
         const tempPortal = new THREE.Object3D();
         tempPortal.position.set(randomX, 0.1, randomZ);
 
 
-        if (isValid) {
-            validPositions.push({ x: randomX, z: randomZ });
-            if (validPositions.length >= maxPortals) break; // Đủ vị trí thì dừng
-        }
-    }
-
-    // Tạo portal từ danh sách vị trí hợp lệ
-    validPositions.forEach(pos => {
         const portal = gltf.scene.clone();
-        portal.position.set(pos.x, 0.1, pos.z);
+        portal.position.set(randomX, 0.1, randomZ + 1.5);
         portal.scale.set(0.07, 0.07, 0.05);
         portal.rotation.y = Math.PI / 2;
 
@@ -230,7 +225,7 @@ loader.load('./src/assets/Portal.glb', function (gltf) {
 
         scene.add(portal);
         portalModel.push(portal);
-    });
+    }
 });
 
 
@@ -264,7 +259,7 @@ fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font)
 
         //for monster
         monsterModels.forEach((o, i) => {
-            const randomNumber = Math.floor(Math.random() * 100) + 1;
+            const randomNumber = Math.floor(Math.random() * 1) + 1;
             const textGeometry = new TextGeometry(`${randomNumber}`, {
                 font: font,
                 size: 0.1,
@@ -360,7 +355,7 @@ function startShooting(model) {
         if (model) { // Kiểm tra xem model đã có chưa
             shootBullet(model, 0, 'soldier');
         }
-    }, 500); // Bắn mỗi 100ms (0.1 giây)
+    }, 300); // Bắn mỗi 100ms (0.1 giây)
 }
 
 function checkCollision() {
@@ -405,11 +400,8 @@ function checkCollision() {
         }
 
         // Kiểm tra va chạm giữa soldier và chướng ngại vật
-        if (obstacleBox.intersectsBox(soldierBox) || monsters == point) {
+        if (obstacleBox.intersectsBox(soldierBox)) {
             isMoving = false;
-            document.querySelector('.replay').style.display = 'flex';
-            document.getElementById("score").textContent = point;
-
         }
     }
 
