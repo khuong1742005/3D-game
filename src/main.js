@@ -91,12 +91,12 @@ loader.load('./src/assets/road.glb', function (gltf) {
 let soldierModel;
 let mixer, runAction;
 let moveLeft = false, moveRight = false;
-const moveSpeed = 0.035;
+const moveSpeed = 0.003;
 loader.load('./src/assets/Soldier.glb', function (gltf) {
 
     soldierModel = gltf.scene;
     soldierModel.position.set(0, 0.1, 3);
-    soldierModel.scale.set(0.14, 0.13, 0.13);
+    soldierModel.scale.set(0.1, 0.09, 0.09);
     scene.add(soldierModel);
 
     soldierModel.traverse(function (object) {
@@ -160,12 +160,12 @@ loader.load('./src/assets/monter_run1.glb', function (gltf) {
         const randomX = -0.3;
         // Clone model bằng SkeletonUtils để đảm bảo clone đúng skeleton
         const model = SkeletonUtils.clone(gltf.scene);
-        model.scale.set(0.24, 0.24, 0.24);
+        model.scale.set(0.1, 0.1, 0.1);
         model.position.set(randomX, 0.1, -4 - i * 2);  // Cách nhau theo trục Z
         scene.add(model);
 
         // Lưu lại model để di chuyển sau
-        // monsterModels.push(model);
+        monsterModels.push(model);
 
         // Tạo AnimationMixer cho monster này và lưu vào mảng mixerMonsters
         const mixer = new THREE.AnimationMixer(model);
@@ -210,7 +210,7 @@ loader.load('./src/assets/Portal.glb', function (gltf) {
     validPositions.forEach(pos => {
         const portal = gltf.scene.clone();
         portal.position.set(pos.x, 0.1, pos.z);
-        portal.scale.set(0.1, 0.1, 0.07);
+        portal.scale.set(0.07, 0.07, 0.05);
         portal.rotation.y = Math.PI / 2;
 
         // Áp dụng material
@@ -243,6 +243,7 @@ fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font)
 
     setTimeout(() => {
 
+        // for portal
         portalModel.forEach((o, i) => {
             const text = "x2";
             const textGeometry = new TextGeometry(text, {
@@ -254,7 +255,7 @@ fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font)
             const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
             const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
-            textMesh.position.set(o.position.x - 0.03, o.position.y + 0.2, o.position.z);
+            textMesh.position.set(o.position.x - 0.3, o.position.y + 0.14, o.position.z);
             textMesh.userData.textValue = text;
             scene.add(textMesh);
             numberPointPortal.push(textMesh);
@@ -272,7 +273,7 @@ fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font)
             const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
             const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
-            textMesh.position.set(o.position.x - 0.03, o.position.y + 0.8, o.position.z);
+            textMesh.position.set(o.position.x - 0.07, o.position.y + 0.3, o.position.z);
             textMesh.userData.textValue = randomNumber;
             scene.add(textMesh);
             numberPoint.push(textMesh);
@@ -344,7 +345,7 @@ function updateBullets() {
         const bullet = bullets[i];
 
         // Cập nhật vị trí viên đạn
-        bullet.mesh.position.add(bullet.direction.clone().multiplyScalar(0.01));
+        bullet.mesh.position.add(bullet.direction.clone().multiplyScalar(0.05));
 
         // Xóa viên đạn nếu bay quá xa
         if (bullet.mesh.position.z < -10) {
@@ -359,7 +360,7 @@ function startShooting(model) {
         if (model) { // Kiểm tra xem model đã có chưa
             shootBullet(model, 0, 'soldier');
         }
-    }, 1000); // Bắn mỗi 100ms (0.1 giây)
+    }, 500); // Bắn mỗi 100ms (0.1 giây)
 }
 
 function checkCollision() {
@@ -475,21 +476,27 @@ function animate() {
         // obstacleModel.forEach(ob => {
         //     ob.position.z += 0.01; // Di chuyển về phía trước
         // });
+        const elapsedTime = clock.getElapsedTime();
+        portalModel.forEach((portal, index) => {
+            const speed = 2; // Tốc độ di chuyển
+            const amplitude = 0.33; // Biên độ dao động (khoảng cách di chuyển)
 
-        // portalModel.forEach(portal => {
-        //     portal.position.z += 0.01; // Di chuyển về phía trước
-        // });
+            portal.position.x = Math.sin(elapsedTime * speed + index) * amplitude;
+        });
 
-        // numberPointPortal.forEach(portal => {
-        //     portal.position.z += 0.01;
-        // })
+        numberPointPortal.forEach((portal, index) => {
+            const speed = 2; // Tốc độ di chuyển
+            const amplitude = 0.33; // Biên độ dao động (khoảng cách di chuyển)
+
+            portal.position.x = Math.sin(elapsedTime * speed + index) * amplitude;
+        })
 
         numberPoint.forEach(np => {
-            np.position.z += 0.01; // Di chuyển về phía trước
+            np.position.z += 0.005; // Di chuyển về phía trước
         });
 
         monsterModels.forEach(monster => {
-            monster.position.z += 0.01;
+            monster.position.z += 0.005;
         });
         if (soldierModel) {
             if (moveLeft) {
