@@ -24,7 +24,8 @@ export function loadMonsters(scene) {
 
         // Clone model bằng SkeletonUtils
         const model = SkeletonUtils.clone(gltf.scene);
-        model.scale.set(0.1, 0.1, 0.1);
+        const randomScale = Math.random() * (0.3 - 0.1) + 0.1;
+        model.scale.set(randomScale, randomScale, randomScale);
         model.position.set(randomX, 0.1, randomZ);
         scene.add(model);
 

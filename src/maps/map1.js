@@ -14,7 +14,7 @@ export function loadMonsters(scene) {
 
   loader.load('./src/assets/monter_run1.glb', function (gltf) {
     for (let groupIndex = 0; groupIndex < totalGroups; groupIndex++) {
-      // Xác định vị trí cơ bản của nhóm trên trục Z
+
       const baseZ = -5;
 
       for (let i = 0; i < monstersPerGroup; i++) {
@@ -24,7 +24,8 @@ export function loadMonsters(scene) {
 
         // Clone model bằng SkeletonUtils
         const model = SkeletonUtils.clone(gltf.scene);
-        model.scale.set(0.1, 0.1, 0.1);
+        const randomScale = Math.random() * (0.3 - 0.1) + 0.1;
+        model.scale.set(randomScale, randomScale, randomScale);
         model.position.set(randomX, 0.1, randomZ);
         scene.add(model);
 
