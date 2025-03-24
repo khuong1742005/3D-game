@@ -7,27 +7,29 @@ import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 
 // ========== Biến toàn cục ==========
 let scene, camera, renderer, controls;
-let soldierModel, mixer;            // Soldier
-let roads = [];                     // Đường
-let bullets = [];                   // Đạn
-let monsterModels = [];             // Quái
-let mixerMonsters = [];             // AnimationMixer của quái
-let portalModel = [];               // Portal
-let numberPoint = [];               // Text hiển thị máu quái
-let numberPointPortal = [];         // Text hiển thị x2/x3
-let loadedFont;                     // Font
-let isMoving = true;                // Dùng để tạm dừng game
-let point = 0;                      // Điểm
-let multiDamage = 1;                // Hệ số damage
-var numMonsters;                    // Số quái tổng (sẽ gán sau)
-let moveLeft = false, moveRight = false;
+let soldierModel, mixer; // Soldier
+let roads = []; // Đường
+let houses = []; // Nhà
+let bullets = []; // Đạn
+let monsterModels = []; // Quái
+let mixerMonsters = []; // AnimationMixer của quái
+let portalModel = []; // Portal
+let numberPoint = []; // Text hiển thị máu quái
+let numberPointPortal = []; // Text hiển thị x2/x3
+let loadedFont; // Font
+let isMoving = true; // Dùng để tạm dừng game
+let point = 0; // Điểm
+let multiDamage = 1; // Hệ số damage
+var numMonsters; // Số quái tổng (sẽ gán sau)
+let moveLeft = false,
+  moveRight = false;
 const moveSpeed = 0.023;
 const clock = new THREE.Clock();
 
 // ========== 1. Khởi tạo Scene, Camera, Renderer, Ánh sáng ==========
 function initScene() {
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xffffff);
+  // scene.background = new THREE.Color(0xffffff);
 
   camera = new THREE.PerspectiveCamera(
     75,
@@ -43,6 +45,36 @@ function initScene() {
 
   controls = new OrbitControls(camera, renderer.domElement);
   controls.update();
+
+  let materialArray = [];
+  // let texture_ft = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_ft.png');
+  // let texture_bk = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_bk.png');
+  // let texture_dn = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_dn.png');
+  // let texture_lf = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_lf.png');
+  // let texture_rt = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_rt.png');
+  // let texture_up = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_up.png');
+
+  let texture_rt = new THREE.TextureLoader().load('./src/scenes/skyboxes/zpos.png');  // front
+  let texture_lf = new THREE.TextureLoader().load('./src/scenes/skyboxes/zneg.png');  // back
+  let texture_up = new THREE.TextureLoader().load('./src/scenes/skyboxes/ypos.png');  // up
+  let texture_dn = new THREE.TextureLoader().load('./src/scenes/skyboxes/yneg.png');  // down
+  let texture_ft = new THREE.TextureLoader().load('./src/scenes/skyboxes/xpos.png');  // right
+  let texture_bk = new THREE.TextureLoader().load('./src/scenes/skyboxes/xneg.png');  // left
+  
+  materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft })); 
+  materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }));
+  materialArray.push(new THREE.MeshBasicMaterial({ map: texture_up }));
+  materialArray.push(new THREE.MeshBasicMaterial({ map: texture_dn }));
+  materialArray.push(new THREE.MeshBasicMaterial({ map: texture_rt }));
+  materialArray.push(new THREE.MeshBasicMaterial({ map: texture_lf }));
+
+
+  for(let i = 0; i < materialArray.length; i++) {
+    materialArray[i].side = THREE.BackSide;
+  }
+  let skyboxGeo = new THREE.BoxGeometry(100, 100, 100);
+  let skybox = new THREE.Mesh(skyboxGeo, materialArray);
+  scene.add(skybox);
 
   // Ánh sáng
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8d8d8d, 1);
@@ -60,7 +92,7 @@ function initScene() {
   scene.add(dirLight);
 }
 
-// ========== 2. Tải đường ==========
+// ========== 2. Tải đường và nhà ==========
 function loadRoads() {
   const loader = new GLTFLoader();
   const roadCount = 1000;
@@ -72,6 +104,23 @@ function loadRoads() {
         road.position.set(0, 0, -i * 2);
         scene.add(road);
         roads.push(road);
+      }
+    },
+    undefined,
+    (error) => console.error("❌ Lỗi khi tải road:", error)
+  );
+
+  loader.load(
+    "./src/assets/houses.glb",
+    (gltf) => {
+      const houseCount = 100;
+      for (let i = 0; i < houseCount; i++) {
+        const house = gltf.scene.clone();
+        house.scale.set(0.18, 0.18, 0.18);
+        house.position.set(0, 0.11, -i * 7.8);
+        house.rotation.y = Math.PI / 2;
+        scene.add(house);
+        houses.push(house);
       }
     },
     undefined,
@@ -107,12 +156,15 @@ function loadRandomMap() {
   const mapIndex = Math.floor(Math.random() * 2) + 1;
   return import(`./maps/map${mapIndex}.js`).then(({ loadMonsters }) => {
     // Gọi hàm loadMonsters
-    const { mixerMonsters: mm, monsterModels: md, portalModel: pm } = loadMonsters(scene);
+    const {
+      mixerMonsters: mm,
+      monsterModels: md,
+      portalModel: pm,
+    } = loadMonsters(scene);
 
     mixerMonsters = mm;
     monsterModels = md;
     portalModel = pm;
-
   });
 }
 
@@ -126,7 +178,7 @@ function loadFontAndSetupText() {
     setTimeout(() => {
       setupPortalText();
       setupMonsterText();
-      numMonsters = monsterModels.length;  
+      numMonsters = monsterModels.length;
     }, 500);
   });
 }
@@ -188,20 +240,35 @@ function startShooting(model) {
     if (model) {
       shootBullet(model, 0, "soldier");
     }
-  }, 300);
+  }, 1000);
 }
 
-function shootBullet(model, posZ, name) {
-  if (!model) return;
+let loadedBullet = null;
 
-  const bulletGeometry = new THREE.SphereGeometry(0.1, 1, 1);
-  const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-  const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
+const bulletLoader = new GLTFLoader();
+bulletLoader.load(
+  "./src/assets/bullet.glb",
+  (gltf) => {
+    loadedBullet = gltf.scene;
+    if (soldierModel) startShooting(soldierModel);
+  },
+  undefined,
+  (error) => {
+    console.error("Lỗi khi load bullet.glb:", error);
+  }
+);
+
+function shootBullet(model, posZ, name) {
+  if (!model || !loadedBullet) return;
+
+  const bullet = loadedBullet.clone();
+  bullet.rotation.y = Math.PI;
+  bullet.scale.set(0.025, 0.025, 0.025);
 
   bullet.position.set(
     model.position.x - posZ < -0.5 ? -0.5 : model.position.x - posZ,
     model.position.y + (name === "soldier" ? 0.1 : 0),
-    model.position.z - 0.2
+    model.position.z - 0.24
   );
 
   // Hướng bắn (ngược hướng soldier nhìn)
@@ -260,7 +327,6 @@ function initEvents() {
 
 // ========== 8. Va chạm ==========
 function checkCollision() {
-
   // Nếu chưa load xong map thì return
   if (!monsterModels || !soldierModel || !bullets || !portalModel) return;
 
@@ -276,10 +342,10 @@ function checkCollision() {
       .setFromObject(monster)
       .expandByScalar(0.08);
 
-    for (let j = bullets.length - 1; j >= 0; j--) {
+    for (let j = 0; j < bullets.length; j++) {
       const bulletBox = new THREE.Box3()
         .setFromObject(bullets[j].mesh)
-        .expandByScalar(0.03);
+        .expandByScalar(0.05);
 
       if (bulletBox.intersectsBox(obstacleBox)) {
         numberPoint[i].userData.textValue -= 1;
@@ -314,7 +380,7 @@ function checkCollision() {
         }
         break;
       }
-    } 
+    }
     // 8.2 Soldier đụng quái => game over
     if (obstacleBox.intersectsBox(soldierBox) || numMonsters === point) {
       isMoving = false;
@@ -329,12 +395,16 @@ function checkCollision() {
     const portalBox = new THREE.Box3()
       .setFromObject(portal)
       .expandByScalar(0.0001);
-
-    // Đạn chạm portal => bắn thêm x2
+      // const portalBoxHelper = new THREE.Box3Helper(portalBox, 0xff0000); // Màu đỏ
+      // scene.add(portalBoxHelper);
+      // Đạn chạm portal => bắn thêm x2
     for (let j = 0; j < bullets.length; j++) {
       const bulletBox = new THREE.Box3()
         .setFromObject(bullets[j].mesh)
-        .expandByScalar(-0.06);
+        .expandByScalar(0.01);
+      // helper for bullet
+      // const bulletBoxHelper = new THREE.Box3Helper(bulletBox, 0xff0000); // Màu đỏ
+      // scene.add(bulletBoxHelper);
 
       if (bulletBox.intersectsBox(portalBox)) {
         scene.remove(bullets[j].mesh);
@@ -347,7 +417,7 @@ function checkCollision() {
     if (portalBox.intersectsBox(soldierBox)) {
       const textValue = numberPointPortal[i].userData.textValue; // "x2" hoặc "x3"
       // Tăng damage: x2 hay x3
-      if (textValue === "x2") multiDamage += 2; 
+      if (textValue === "x2") multiDamage += 2;
       if (textValue === "x3") multiDamage += 3;
 
       // Hiển thị
@@ -382,6 +452,10 @@ function animate() {
     // Di chuyển road
     roads.forEach((road) => {
       road.position.z += 0.01;
+    });
+
+    houses.forEach((house) => {
+      house.position.z += 0.01;
     });
 
     // Portal lắc lư
