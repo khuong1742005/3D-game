@@ -1,516 +1,456 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
-import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { FontLoader } from "three/addons/loaders/FontLoader.js";
+import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
+import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 
-
-
-
-//game stats
-let point = 0;
-let multiDamage = 1;
-
-
-
-
+// ========== Biến toàn cục ==========
+let scene, camera, renderer, controls;
+let soldierModel, mixer;            // Soldier
+let roads = [];                     // Đường
+let bullets = [];                   // Đạn
+let monsterModels = [];             // Quái
+let mixerMonsters = [];             // AnimationMixer của quái
+let portalModel = [];               // Portal
+let numberPoint = [];               // Text hiển thị máu quái
+let numberPointPortal = [];         // Text hiển thị x2/x3
+let loadedFont;                     // Font
+let isMoving = true;                // Dùng để tạm dừng game
+let point = 0;                      // Điểm
+let multiDamage = 1;                // Hệ số damage
+var numMonsters;                    // Số quái tổng (sẽ gán sau)
+let moveLeft = false, moveRight = false;
+const moveSpeed = 0.023;
 const clock = new THREE.Clock();
 
-// Tạo scene
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff); // Màu trắng
+// ========== 1. Khởi tạo Scene, Camera, Renderer, Ánh sáng ==========
+function initScene() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
 
+  camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  camera.position.set(-0.02, 0.68, 4.07);
 
-// Tạo camera
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(-0.024520517567958474, 0.6795618807394173, 4.070773647272994);
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
 
-// Tạo renderer
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.update();
 
-// Grid helper
-// const size = 10;
-// const divisions = 10;
-// const gridHelper = new THREE.GridHelper(size, divisions);
-// scene.add(gridHelper);
+  // Ánh sáng
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8d8d8d, 1);
+  hemiLight.position.set(0, 20, 0);
+  scene.add(hemiLight);
 
-// Light
-// const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Màu trắng, cường độ 0.5
-// scene.add(ambientLight);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+  dirLight.castShadow = true;
+  dirLight.shadow.camera.top = 2;
+  dirLight.shadow.camera.bottom = -2;
+  dirLight.shadow.camera.left = -2;
+  dirLight.shadow.camera.right = 2;
+  dirLight.shadow.camera.near = 0.1;
+  dirLight.shadow.camera.far = 40;
+  scene.add(dirLight);
+}
 
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-// directionalLight.position.set(5, 10, 5);
-// scene.add(directionalLight);
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8d8d8d, 1);
-hemiLight.position.set(0, 20, 0);
-scene.add(hemiLight);
-
-const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-// dirLight.position.set(- 3, 10, - 10);
-dirLight.castShadow = true;
-dirLight.shadow.camera.top = 2;
-dirLight.shadow.camera.bottom = - 2;
-dirLight.shadow.camera.left = - 2;
-dirLight.shadow.camera.right = 2;
-dirLight.shadow.camera.near = 0.1;
-dirLight.shadow.camera.far = 40;
-scene.add(dirLight);
-
-// const pointLight = new THREE.PointLight(0xffffff, 1, 50); // Màu trắng, cường độ 1, phạm vi 50
-// pointLight.position.set(0, 5, 0);
-// scene.add(pointLight);
-
-
-
-// Camera helper
-// const helper = new THREE.CameraHelper(camera);
-// scene.add(helper);
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.update();
-
-// Road
-const roads = []; // Mảng chứa các đoạn đường
-const roadCount = 1000; // Số lượng đoạn đường
-
-const loader = new GLTFLoader();
-loader.load('./src/assets/road.glb', function (gltf) {
-    for (let i = 0; i < roadCount; i++) {
-        const road = gltf.scene.clone(); // Nhân bản model
-        road.position.set(0, 0, -i * 2); // Xếp theo trục Z (cách nhau 10 đơn vị)
+// ========== 2. Tải đường ==========
+function loadRoads() {
+  const loader = new GLTFLoader();
+  const roadCount = 1000;
+  loader.load(
+    "./src/assets/road.glb",
+    (gltf) => {
+      for (let i = 0; i < roadCount; i++) {
+        const road = gltf.scene.clone();
+        road.position.set(0, 0, -i * 2);
         scene.add(road);
         roads.push(road);
-    }
-}, undefined, function (error) {
-    console.error("❌ Lỗi khi tải model:", error);
-});
+      }
+    },
+    undefined,
+    (error) => console.error("❌ Lỗi khi tải road:", error)
+  );
+}
 
-// Soldier
-let soldierModel;
-let mixer, runAction;
-let moveLeft = false, moveRight = false;
-const moveSpeed = 0.003;
-loader.load('./src/assets/Soldier.glb', function (gltf) {
-
+// ========== 3. Tải Soldier ==========
+function loadSoldier() {
+  const loader = new GLTFLoader();
+  loader.load("./src/assets/Soldier.glb", (gltf) => {
     soldierModel = gltf.scene;
     soldierModel.position.set(0, 0.1, 3);
     soldierModel.scale.set(0.1, 0.09, 0.09);
     scene.add(soldierModel);
 
-    soldierModel.traverse(function (object) {
-        if (object.isMesh) object.castShadow = true;
+    soldierModel.traverse((obj) => {
+      if (obj.isMesh) obj.castShadow = true;
     });
 
     const animations = gltf.animations;
-
     mixer = new THREE.AnimationMixer(soldierModel);
-
-    runAction = mixer.clipAction(animations[1]);  // Run
-
+    const runAction = mixer.clipAction(animations[1]); // index 1: Run
     runAction.play();
 
     startShooting(soldierModel);
-});
-
-
-// Obstacle
-// const obstacleModel = [];
-// const obstacleCount = 1000;
-// loader.load('./src/assets/chai.glb', function (gltf) {
-//     for (let i = 0; i < obstacleCount; i++) {
-//         const obstacle = gltf.scene.clone();
-//         const randomX = Math.random() < 0.5
-//             ? 0.3
-//             : -0.3
-
-//         obstacle.position.set(randomX, 0.2, -i * 2);
-//         obstacle.scale.set(0.1, 0.1, 0.07);
-//         obstacle.rotation.x = Math.PI / 2;
-//         // const glassMaterial = new THREE.MeshPhysicalMaterial({
-//         //     color: 0xff4169e1,
-//         //     transparent: true,
-//         //     opacity: 0.5,
-//         //     emissive: 0xff4169e1, // Màu phát sáng (trắng)
-//         //     emissiveIntensity: 1.5,
-//         //     transmission: 0.9, // Độ xuyên thấu (hiệu ứng kính)
-//         //     metalness: 0.2, // Một chút kim loại để phản chiếu
-//         // });
-//         // obstacle.traverse((child) => {
-//         //     if (child.isMesh) {
-//         //         child.material = glassMaterial;
-//         //     }
-//         // });
-//         // scene.add(obstacle);
-//         obstacleModel.push(obstacle);
-
-
-//     }
-// });
-
-
-let mixerMonsters = [];
-let monsterModels = [];
-
-const totalGroups = 5; // Số nhóm quái
-const monstersPerGroup = 20; // Số quái trong mỗi nhóm
-
-loader.load('./src/assets/monter_run1.glb', function (gltf) {
-    for (let groupIndex = 0; groupIndex < totalGroups; groupIndex++) {
-        // Xác định vị trí cơ bản của nhóm trên trục Z
-        const baseZ = -5;
-
-        for (let i = 0; i < monstersPerGroup; i++) {
-            // Tạo vị trí ngẫu nhiên trong phạm vi nhất định
-            const randomX = Math.random() * (0 + 0.5) - 0.5;
-            const randomZ = baseZ + (Math.random() - 0.5) * 3; // Z lệch nhẹ trong nhóm
-
-            // Clone model bằng SkeletonUtils
-            const model = SkeletonUtils.clone(gltf.scene);
-            model.scale.set(0.1, 0.1, 0.1);
-            model.position.set(randomX, 0.1, randomZ); // Giới hạn Y, X và Z tùy chọn
-            scene.add(model);
-
-            // Lưu lại model để di chuyển sau
-            monsterModels.push(model);
-
-            // Tạo AnimationMixer cho monster này và lưu vào mảng mixerMonsters
-            const mixer = new THREE.AnimationMixer(model);
-            mixerMonsters.push(mixer);
-
-            const clips = gltf.animations;
-            if (clips.length > 0) {
-                const action = mixer.clipAction(clips[0]);
-                action.play();
-            }
-        }
-    }
-});
-
-const portalModel = [];
-
-loader.load('./src/assets/Portal.glb', function (gltf) {
-    const maxPortals = 1;
-    // Tạo danh sách vị trí hợp lệ
-    for (let i = 0; i < maxPortals; i++) {
-        // const randomX = Math.random() < 0.5 ? 0.3 : -0.3;
-        const randomX = -0.3;
-        const randomZ = -i; // Giữ khoảng cách trên trục Z
-
-        // Tạo Box3 giả định cho portal
-        const tempPortal = new THREE.Object3D();
-        tempPortal.position.set(randomX, 0.1, randomZ);
-
-
-        const portal = gltf.scene.clone();
-        portal.position.set(randomX, 0.1, randomZ + 1.5);
-        portal.scale.set(0.07, 0.07, 0.05);
-        portal.rotation.y = Math.PI / 2;
-
-        // Áp dụng material
-        const glassMaterial = new THREE.MeshPhysicalMaterial({
-            color: 0xff4169e1,
-            transparent: true,
-            opacity: 0.9,
-            emissive: 0xff4169e1,
-            emissiveIntensity: 1.5,
-        });
-
-        portal.traverse((child) => {
-            if (child.isMesh) {
-                child.material = glassMaterial;
-            }
-        });
-
-        scene.add(portal);
-        portalModel.push(portal);
-    }
-});
-
-
-const numberPoint = [];
-const numberPointPortal = [];
-const fontLoader = new FontLoader();
-let loadedFont;
-fontLoader.load('../src/fonts/helvetiker_regular.typeface.json', function (font) {
-    loadedFont = font;
-
-    setTimeout(() => {
-
-        // for portal
-        portalModel.forEach((o, i) => {
-            const text = "x2";
-            const textGeometry = new TextGeometry(text, {
-                font: font,
-                size: 0.1,
-                height: 0.01,
-            });
-
-            const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-
-            textMesh.position.set(o.position.x - 0.3, o.position.y + 0.14, o.position.z);
-            textMesh.userData.textValue = text;
-            scene.add(textMesh);
-            numberPointPortal.push(textMesh);
-        });
-
-
-        //for monster
-        monsterModels.forEach((o, i) => {
-            const randomNumber = Math.floor(Math.random() * 1) + 1;
-            const textGeometry = new TextGeometry(`${randomNumber}`, {
-                font: font,
-                size: 0.1,
-                height: 0.01,
-            });
-            const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-
-            textMesh.position.set(o.position.x - 0.07, o.position.y + 0.3, o.position.z);
-            textMesh.userData.textValue = randomNumber;
-            scene.add(textMesh);
-            numberPoint.push(textMesh);
-        });
-
-    }, 500);
-
-
-});
-
-
-// Event
-let isMoving = true;
-document.addEventListener('keydown', (event) => {
-    if (event.code === 'Space') {
-        isMoving = !isMoving; // Đảo trạng thái
-    }
-});
-
-document.addEventListener("keydown", (event) => {
-    if (event.code === "ArrowLeft") moveLeft = true;
-    if (event.code === "ArrowRight") moveRight = true;
-});
-
-document.addEventListener("keyup", (event) => {
-    if (event.code === "ArrowLeft") moveLeft = false;
-    if (event.code === "ArrowRight") moveRight = false;
-});
-
-// Bullets
-const bullets = []; // Mảng chứa các viên đạn
-
-function shootBullet(model, posZ, name) {
-    if (!model) return;
-
-    // Tạo viên đạn (hình cầu nhỏ)
-    const bulletGeometry = new THREE.SphereGeometry(0.1, 1, 1);
-    const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
-
-    // Lấy vị trí hiện tại của soldier
-    bullet.position.set(((model.position.x - posZ) < -0.5) ? -0.5 : (model.position.x - posZ), model.position.y + ((name == 'soldier') ? 0.1 : 0), model.position.z - 0.2);
-
-    // Xác định hướng bắn (hướng nhìn của soldier)
-    const direction = new THREE.Vector3();
-    soldierModel.getWorldDirection(direction); // Lấy hướng từ model
-    direction.negate();
-
-    bullets.push({ mesh: bullet, direction: direction });
-    scene.add(bullet);
+  });
 }
 
+// ========== 4. Dynamic Import Map (load quái, portal) ==========
+function loadRandomMap() {
+  // Random mapIndex = 1..2 (hoặc 1..3 tuỳ bạn)
+  const mapIndex = Math.floor(Math.random() * 2) + 1;
+  return import(`./maps/map${mapIndex}.js`).then(({ loadMonsters }) => {
+    // Gọi hàm loadMonsters
+    const { mixerMonsters: mm, monsterModels: md, portalModel: pm } = loadMonsters(scene);
+
+    mixerMonsters = mm;
+    monsterModels = md;
+    portalModel = pm;
+
+  });
+}
+
+// ========== 5. Tải Font và tạo text cho quái, portal ==========
+function loadFontAndSetupText() {
+  const fontLoader = new FontLoader();
+  fontLoader.load("../src/fonts/helvetiker_regular.typeface.json", (font) => {
+    loadedFont = font;
+
+    // Đợi 0.5s để chắc chắn quái & portal đã được push (vì GLTFLoader bất đồng bộ)
+    setTimeout(() => {
+      setupPortalText();
+      setupMonsterText();
+      numMonsters = monsterModels.length;  
+    }, 500);
+  });
+}
+
+// Tạo text x2/x3 cho portal
+function setupPortalText() {
+  if (!portalModel) return;
+  portalModel.forEach((portal) => {
+    // Random x2 hoặc x3
+    const text = Math.random() < 0.5 ? "x2" : "x3";
+
+    const textGeometry = new TextGeometry(text, {
+      font: loadedFont,
+      size: 0.1,
+      height: 0.01,
+    });
+    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+
+    textMesh.position.set(
+      portal.position.x - 0.3,
+      portal.position.y + 0.14,
+      portal.position.z
+    );
+    textMesh.userData.textValue = text;
+    scene.add(textMesh);
+    numberPointPortal.push(textMesh);
+  });
+}
+
+// Tạo text hiển thị máu (1..3) cho monster
+function setupMonsterText() {
+  if (!monsterModels) return;
+  monsterModels.forEach((monster) => {
+    const randomNumber = Math.floor(Math.random() * 3) + 1;
+    const textGeometry = new TextGeometry(`${randomNumber}`, {
+      font: loadedFont,
+      size: 0.1,
+      height: 0.01,
+    });
+    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+
+    textMesh.position.set(
+      monster.position.x - 0.07,
+      monster.position.y + 0.3,
+      monster.position.z
+    );
+    textMesh.userData.textValue = randomNumber;
+    scene.add(textMesh);
+    numberPoint.push(textMesh);
+  });
+}
+
+// ========== 6. Bắn đạn ==========
+function startShooting(model) {
+  // Bắn đạn định kỳ 300ms
+  setInterval(() => {
+    if (model) {
+      shootBullet(model, 0, "soldier");
+    }
+  }, 300);
+}
+
+function shootBullet(model, posZ, name) {
+  if (!model) return;
+
+  const bulletGeometry = new THREE.SphereGeometry(0.1, 1, 1);
+  const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
+
+  bullet.position.set(
+    model.position.x - posZ < -0.5 ? -0.5 : model.position.x - posZ,
+    model.position.y + (name === "soldier" ? 0.1 : 0),
+    model.position.z - 0.2
+  );
+
+  // Hướng bắn (ngược hướng soldier nhìn)
+  const direction = new THREE.Vector3();
+  soldierModel && soldierModel.getWorldDirection(direction);
+  direction.negate();
+
+  bullets.push({ mesh: bullet, direction: direction });
+  scene.add(bullet);
+}
 
 function multiBullet(model, multiValue) {
-    if (!soldierModel) return;
-    if (multiValue == "x2") {
-        const randomPos = Math.random() * 0.1 - 0.05;
-        shootBullet(model, randomPos, 'bullet');
-        shootBullet(model, -randomPos, 'bullet');
+  if (!soldierModel || !model) return;
 
-    }
-    else if (multiValue == "x3") {
-
-    }
+  if (multiValue === "x2") {
+    const randomPos = Math.random() * 0.1 - 0.05;
+    shootBullet(model, randomPos, "bullet");
+    shootBullet(model, -randomPos, "bullet");
+  } else if (multiValue === "x3") {
+    const randomPos = Math.random() * 0.1 - 0.05;
+    shootBullet(model, randomPos, "bullet");
+    shootBullet(model, 0, "bullet");
+    shootBullet(model, -randomPos, "bullet");
+  }
 }
 
 function updateBullets() {
-    for (let i = 0; i < bullets.length; i++) {
-        const bullet = bullets[i];
+  for (let i = 0; i < bullets.length; i++) {
+    const bullet = bullets[i];
+    bullet.mesh.position.add(bullet.direction.clone().multiplyScalar(0.05));
 
-        // Cập nhật vị trí viên đạn
-        bullet.mesh.position.add(bullet.direction.clone().multiplyScalar(0.05));
-
-        // Xóa viên đạn nếu bay quá xa
-        if (bullet.mesh.position.z < -10) {
-            scene.remove(bullet.mesh);
-            bullets.splice(i, 1);
-            i--;
-        }
+    // Xoá đạn nếu bay quá xa
+    if (bullet.mesh.position.z < -10) {
+      scene.remove(bullet.mesh);
+      bullets.splice(i, 1);
+      i--;
     }
-}
-function startShooting(model) {
-    setInterval(() => {
-        if (model) { // Kiểm tra xem model đã có chưa
-            shootBullet(model, 0, 'soldier');
-        }
-    }, 300); // Bắn mỗi 100ms (0.1 giây)
+  }
 }
 
+// ========== 7. Xử lý sự kiện phím ==========
+function initEvents() {
+  document.addEventListener("keydown", (event) => {
+    if (event.code === "Space") {
+      isMoving = !isMoving;
+    }
+    if (event.code === "ArrowLeft") moveLeft = true;
+    if (event.code === "ArrowRight") moveRight = true;
+  });
+
+  document.addEventListener("keyup", (event) => {
+    if (event.code === "ArrowLeft") moveLeft = false;
+    if (event.code === "ArrowRight") moveRight = false;
+  });
+}
+
+// ========== 8. Va chạm ==========
 function checkCollision() {
-    if (!monsterModels || !soldierModel || !bullets || !portalModel) return;
 
-    const soldierBox = new THREE.Box3().setFromObject(soldierModel).expandByScalar(-0.03);
+  // Nếu chưa load xong map thì return
+  if (!monsterModels || !soldierModel || !bullets || !portalModel) return;
 
-    // 🔹 Kiểm tra va chạm với obstacleModel
-    for (let i = monsterModels.length - 1; i >= 0; i--) {
-        const o = monsterModels[i];
-        const obstacleBox = new THREE.Box3().setFromObject(o).expandByScalar(0.08);
+  // Box cho soldier
+  const soldierBox = new THREE.Box3()
+    .setFromObject(soldierModel)
+    .expandByScalar(-0.03);
 
-        // Kiểm tra va chạm với đạn
-        for (let j = bullets.length - 1; j >= 0; j--) {
-            const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh).expandByScalar(0.03);
-            if (bulletBox.intersectsBox(obstacleBox)) {
-                numberPoint[i].userData.textValue -= 1;
+  // 8.1 Kiểm tra va chạm giữa đạn & quái
+  for (let i = monsterModels.length - 1; i >= 0; i--) {
+    const monster = monsterModels[i];
+    const obstacleBox = new THREE.Box3()
+      .setFromObject(monster)
+      .expandByScalar(0.08);
 
-                scene.remove(bullets[j].mesh);
-                bullets.splice(j, 1);
+    for (let j = bullets.length - 1; j >= 0; j--) {
+      const bulletBox = new THREE.Box3()
+        .setFromObject(bullets[j].mesh)
+        .expandByScalar(0.03);
 
-                scene.remove(numberPoint[i]); // Xóa số cũ
-                const newTextGeometry = new TextGeometry(`${numberPoint[i].userData.textValue}`, {
-                    font: loadedFont,
-                    size: 0.1,
-                    height: 0.01,
-                });
-                numberPoint[i].geometry = newTextGeometry;
-                scene.add(numberPoint[i]);
+      if (bulletBox.intersectsBox(obstacleBox)) {
+        numberPoint[i].userData.textValue -= 1;
 
-                if (numberPoint[i].userData.textValue <= 0) {
-                    point++;
-                    document.getElementById("point").textContent = point;
-                    scene.remove(o);
-                    monsterModels.splice(i, 1);
-                    scene.remove(numberPoint[i]);
-                    numberPoint.splice(i, 1);
-                    break;
-                }
-                break;
-            }
+        scene.remove(bullets[j].mesh);
+        bullets.splice(j, 1);
+
+        // Cập nhật text
+        scene.remove(numberPoint[i]);
+        const newTextGeometry = new TextGeometry(
+          `${numberPoint[i].userData.textValue}`,
+          {
+            font: loadedFont,
+            size: 0.1,
+            height: 0.01,
+          }
+        );
+        numberPoint[i].geometry = newTextGeometry;
+        scene.add(numberPoint[i]);
+
+        // Nếu quái hết máu
+        if (numberPoint[i].userData.textValue <= 0) {
+          point++;
+          document.getElementById("point").textContent = point;
+
+          scene.remove(monster);
+          monsterModels.splice(i, 1);
+
+          scene.remove(numberPoint[i]);
+          numberPoint.splice(i, 1);
+          break;
         }
+        break;
+      }
+    } 
+    // 8.2 Soldier đụng quái => game over
+    if (obstacleBox.intersectsBox(soldierBox) || numMonsters === point) {
+      isMoving = false;
+      document.querySelector(".replay").style.display = "flex";
+      document.getElementById("score").textContent = point;
+    }
+  }
 
-        // Kiểm tra va chạm giữa soldier và chướng ngại vật
-        if (obstacleBox.intersectsBox(soldierBox)) {
-            isMoving = false;
-        }
+  // 8.3 Soldier & đạn va chạm portal
+  for (let i = portalModel.length - 1; i >= 0; i--) {
+    const portal = portalModel[i];
+    const portalBox = new THREE.Box3()
+      .setFromObject(portal)
+      .expandByScalar(0.0001);
+
+    // Đạn chạm portal => bắn thêm x2
+    for (let j = 0; j < bullets.length; j++) {
+      const bulletBox = new THREE.Box3()
+        .setFromObject(bullets[j].mesh)
+        .expandByScalar(-0.06);
+
+      if (bulletBox.intersectsBox(portalBox)) {
+        scene.remove(bullets[j].mesh);
+        multiBullet(bullets[j].mesh, "x2");
+        bullets.splice(j, 1);
+      }
     }
 
+    // Soldier chạm portal => tăng damage
+    if (portalBox.intersectsBox(soldierBox)) {
+      const textValue = numberPointPortal[i].userData.textValue; // "x2" hoặc "x3"
+      // Tăng damage: x2 hay x3
+      if (textValue === "x2") multiDamage += 2; 
+      if (textValue === "x3") multiDamage += 3;
 
+      // Hiển thị
+      document.getElementById("DM").textContent = multiDamage;
 
-    // 🔹 Kiểm tra va chạm với portalModel (THÊM XỬ LÝ XÓA SỐ)
-    for (let i = portalModel.length - 1; i >= 0; i--) {
-        const portal = portalModel[i];
-        const portalBox = new THREE.Box3().setFromObject(portal).expandByScalar(0.0001);
+      // Xoá portal
+      scene.remove(portal);
+      portalModel.splice(i, 1);
 
-        //helper for portal
-        // const portalBoxHelper = new THREE.Box3Helper(portalBox, 0xff0000); // Màu đỏ
-        // scene.add(portalBoxHelper);
+      scene.remove(numberPointPortal[i]);
+      numberPointPortal.splice(i, 1);
 
-        for (let j = 0; j <= bullets.length - 1; j++) {
-            const bulletBox = new THREE.Box3().setFromObject(bullets[j].mesh).expandByScalar(-0.06);
-
-            // helper for bullet
-            // const bulletBoxHelper = new THREE.Box3Helper(bulletBox, 0xff0000); // Màu đỏ
-            // scene.add(bulletBoxHelper);
-
-            if (bulletBox.intersectsBox(portalBox)) {
-
-                scene.remove(bullets[j].mesh);
-                multiBullet(bullets[j].mesh, "x2");
-                console.log("spam" + j);
-                bullets.splice(j, 1);
-            }
-
-        }
-        if (portalBox.intersectsBox(soldierBox)) {
-            multiDamage += numberPointPortal[i].userData.textValue;
-            multiDamage = Math.max(multiDamage, 1); // Tối đa 100 damage
-            document.getElementById("DM").textContent = multiDamage;
-
-            scene.remove(portal);
-            portalModel.splice(i, 1);
-            scene.remove(numberPointPortal[i]);
-            numberPointPortal.splice(i, 1);
-            console.log("Soldier entered the portal!");
-            break;
-            // Thêm hành động nếu soldier đi qua portal (dịch chuyển, hiệu ứng, v.v.)
-        }
-        // Kiểm tra va chạm giữa soldier và portal
-
+      break;
     }
+  }
 }
 
-function debugBoundingBox(box, color = 0xff0000) {
-    const helper = new THREE.Box3Helper(box, color);
-    scene.add(helper);
-}
-
-// Animation loop
+// ========== 9. Vòng lặp animate ==========
 function animate() {
+  requestAnimationFrame(animate);
 
+  const delta = clock.getDelta();
+  // Cập nhật animation soldier
+  if (mixer) mixer.update(delta);
 
-    requestAnimationFrame(animate);
-    if (isMoving) {
-        roads.forEach(road => {
-            road.position.z += 0.01; // Di chuyển về phía trước
-        });
+  // Cập nhật animation quái
+  if (mixerMonsters && mixerMonsters.length) {
+    mixerMonsters.forEach((mx) => mx.update(delta));
+  }
 
-        // obstacleModel.forEach(ob => {
-        //     ob.position.z += 0.01; // Di chuyển về phía trước
-        // });
-        const elapsedTime = clock.getElapsedTime();
-        portalModel.forEach((portal, index) => {
-            const speed = 2; // Tốc độ di chuyển
-            const amplitude = 0.33; // Biên độ dao động (khoảng cách di chuyển)
+  if (isMoving) {
+    // Di chuyển road
+    roads.forEach((road) => {
+      road.position.z += 0.01;
+    });
 
-            portal.position.x = Math.sin(elapsedTime * speed + index) * amplitude;
-        });
-
-        numberPointPortal.forEach((portal, index) => {
-            const speed = 2; // Tốc độ di chuyển
-            const amplitude = 0.33; // Biên độ dao động (khoảng cách di chuyển)
-
-            portal.position.x = Math.sin(elapsedTime * speed + index) * amplitude;
-        })
-
-        numberPoint.forEach(np => {
-            np.position.z += 0.005; // Di chuyển về phía trước
-        });
-
-        monsterModels.forEach(monster => {
-            monster.position.z += 0.005;
-        });
-        if (soldierModel) {
-            if (moveLeft) {
-                if (soldierModel.position.x < -0.5) soldierModel.position.x -= 0;
-                else soldierModel.position.x -= moveSpeed;
-            }
-            if (moveRight) {
-                if (soldierModel.position.x > 0.5) soldierModel.position.x -= 0;
-                else soldierModel.position.x += moveSpeed;
-            }
-        }
-        checkCollision();
-        updateBullets();
-        renderer.render(scene, camera);
+    // Portal lắc lư
+    const elapsedTime = clock.getElapsedTime();
+    if (portalModel) {
+      portalModel.forEach((portal, index) => {
+        const speed = 2;
+        const amplitude = 0.33;
+        portal.position.x = Math.sin(elapsedTime * speed + index) * amplitude;
+      });
     }
-    const delta = clock.getDelta();
+    if (numberPointPortal) {
+      numberPointPortal.forEach((portal, index) => {
+        const speed = 2;
+        const amplitude = 0.33;
+        portal.position.x = Math.sin(elapsedTime * speed + index) * amplitude;
+      });
+    }
 
-    // Cập nhật mixer của soldier
-    if (mixer) mixer.update(delta);
+    // Monster & text di chuyển
+    if (monsterModels) {
+      monsterModels.forEach((monster) => {
+        monster.position.z += 0.008;
+      });
+    }
+    if (numberPoint) {
+      numberPoint.forEach((np) => {
+        np.position.z += 0.008;
+      });
+    }
 
-    // Cập nhật mixer của monster
-    mixerMonsters.forEach(mixer => mixer.update(delta));
+    // Soldier di chuyển trái/phải
+    if (soldierModel) {
+      if (moveLeft) {
+        if (soldierModel.position.x > -0.5) {
+          soldierModel.position.x -= moveSpeed;
+        }
+      }
+      if (moveRight) {
+        if (soldierModel.position.x < 0.5) {
+          soldierModel.position.x += moveSpeed;
+        }
+      }
+    }
 
+    // Cập nhật va chạm
+    checkCollision();
+    // Cập nhật đạn
+    updateBullets();
+  }
+
+  // Cuối cùng: render
+  renderer.render(scene, camera);
 }
-animate();
+
+// ========== 10. Khởi chạy game ==========
+function startGame() {
+  initScene();
+  initEvents();
+
+  loadRoads();
+  loadSoldier();
+
+  // Dynamic import map -> khi xong thì load font & animate
+  loadRandomMap().then(() => {
+    loadFontAndSetupText();
+    animate();
+  });
+}
+
+// Gọi hàm khởi chạy
+startGame();
