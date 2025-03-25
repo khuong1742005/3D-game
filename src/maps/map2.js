@@ -9,8 +9,8 @@ export function loadMonsters(scene) {
   const monsterModels = [];
 
   const loader = new GLTFLoader();
-  const totalGroups = 5;        // Số nhóm quái
-  const monstersPerGroup = 15;  // Số quái trong mỗi nhóm
+  const totalGroups = 25;        // Số nhóm quái
+  const monstersPerGroup = 5;  // Số quái trong mỗi nhóm
 
   loader.load('./src/assets/monter_run1.glb', function (gltf) {
     for (let groupIndex = 0; groupIndex < totalGroups; groupIndex++) {
@@ -20,7 +20,7 @@ export function loadMonsters(scene) {
       for (let i = 0; i < monstersPerGroup; i++) {
         // Tạo vị trí ngẫu nhiên trong phạm vi nhất định
         const randomX = Math.random() - 0.5;
-        const randomZ = baseZ + -1 * i + (Math.random() - 0.5) * 10 - 10;
+        const randomZ = baseZ + -13 * i + (Math.random() - 0.5) * 12 - 5;
 
         // Clone model bằng SkeletonUtils
         const model = SkeletonUtils.clone(gltf.scene);

@@ -19,6 +19,7 @@ let numberPointPortal = []; // Text hiển thị x2/x3
 let loadedFont; // Font
 let isMoving = true; // Dùng để tạm dừng game
 let point = 0; // Điểm
+let HP = 100;
 let multiDamage = 1; // Hệ số damage
 var numMonsters; // Số quái tổng (sẽ gán sau)
 let moveLeft = false,
@@ -209,7 +210,7 @@ function loadSoldier() {
   loader.load("./src/assets/Soldier.glb", (gltf) => {
     soldierModel = gltf.scene;
     soldierModel.position.set(0, 0.1, 3);
-    soldierModel.scale.set(0.1, 0.09, 0.09);
+    soldierModel.scale.set(0.1 * 1.7, 0.09 * 1.7, 0.09 * 1.7);
     scene.add(soldierModel);
 
     soldierModel.traverse((obj) => {
@@ -428,6 +429,15 @@ function checkCollision() {
       .setFromObject(monster)
       .expandByScalar(0.08);
 
+    if (monster.position.z >= 3.2) {
+      scene.remove(monster);
+      monsterModels.splice(i, 1);
+      scene.remove(numberPoint[i]);
+      numberPoint.splice(i, 1);
+      HP-=5
+      document.getElementById("HP").textContent = HP;
+    }
+
     for (let j = 0; j < bullets.length; j++) {
       const bulletBox = new THREE.Box3()
         .setFromObject(bullets[j].mesh)
@@ -468,7 +478,7 @@ function checkCollision() {
       }
     }
     // 8.2 Soldier đụng quái => game over
-    if (obstacleBox.intersectsBox(soldierBox) || numMonsters === point) {
+    if (obstacleBox.intersectsBox(soldierBox) || numMonsters === point || HP <= 0) {
       isMoving = false;
       document.querySelector(".replay").style.display = "flex";
       document.getElementById("score").textContent = point;
