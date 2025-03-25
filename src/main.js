@@ -37,16 +37,21 @@ function initScene() {
     0.1,
     1000
   );
-  camera.position.set(-0.02, 0.58, 3.67);
-
-  renderer = new THREE.WebGLRenderer();
+  camera.position.set(0, 1.28, 6);
+  // camera.lookAt(new THREE.Vector3(0, 0.1, 7));
+  // controls.target.set(0, 0.1, 7);
+  renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(window.devicePixelRatio);
 
   document.body.appendChild(renderer.domElement);
 
   controls = new OrbitControls(camera, renderer.domElement);
+  controls.minDistance = 1;
+  controls.maxDistance = 4;
+  controls.enablePan = false;
   controls.update();
 
   //skyboxes --------------------------------
@@ -81,11 +86,11 @@ function initScene() {
   for (let i = 0; i < materialArray.length; i++) {
     materialArray[i].side = THREE.BackSide;
   }
-  let skyboxGeo = new THREE.BoxGeometry(100, 100, 100);
+  let skyboxGeo = new THREE.BoxGeometry(300, 300, 300);
   let skybox = new THREE.Mesh(skyboxGeo, materialArray);
   scene.add(skybox);
 
-  // Ánh sáng
+  // Ánh sáng-----------------------------------------------------
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8d8d8d, 1);
   hemiLight.position.set(0, 20, 0);
   scene.add(hemiLight);
@@ -102,6 +107,8 @@ function initScene() {
   dirLight.shadow.camera.far = 50;
   dirLight.shadow.normalBias = 0.05;
   dirLight.intensity = 3; // Tăng từ 2 lên 3
+  dirLight.shadow.mapSize.width = 2048;
+  dirLight.shadow.mapSize.height = 2048;
 
   scene.add(dirLight);
 
@@ -133,7 +140,7 @@ function initScene() {
   // scene.add(spotLightHelper);
 
   // sàn
-  const planeGeometry = new THREE.PlaneGeometry(50, 50);
+  const planeGeometry = new THREE.PlaneGeometry(250, 250);
   const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
   const plane = new THREE.Mesh(planeGeometry, planeMaterial);
   plane.rotation.x = -Math.PI / 2;
@@ -173,7 +180,7 @@ function loadRoads() {
   loader.load(
     "./src/assets/houses.glb",
     (gltf) => {
-      const houseCount = 100;
+      const houseCount = 5;
       for (let i = 0; i < houseCount; i++) {
         const house = gltf.scene.clone();
 
@@ -184,8 +191,8 @@ function loadRoads() {
           }
         });
 
-        house.scale.set(0.18, 0.18, 0.18);
-        house.position.set(0, 0.11, -i * 7.8);
+        house.scale.set(0.18457, 0.18, 0.18);
+        house.position.set(0, 0.11, -i * 11.68);
         house.rotation.y = Math.PI / 2;
         scene.add(house);
         houses.push(house);
@@ -260,7 +267,7 @@ function setupPortalText() {
   portalModel.forEach((portal) => {
     // Random x2 hoặc x3
     const text = Math.random() < 0.5 ? "x2" : "x3";
-
+    portal.text = text;
     const textGeometry = new TextGeometry(text, {
       font: loadedFont,
       size: 0.1,
@@ -311,7 +318,7 @@ function startShooting(model) {
     if (model) {
       shootBullet(model, 0, "soldier");
     }
-  }, 1000);
+  }, 100);
 }
 
 let loadedBullet = null;
@@ -341,11 +348,11 @@ function shootBullet(model, posZ, name) {
   const bullet = loadedBullet.clone();
 
   bullet.rotation.y = Math.PI;
-  bullet.scale.set(0.025, 0.025, 0.025);
+  bullet.scale.set(0.015, 0.015, 0.015);
 
   bullet.position.set(
     model.position.x - posZ < -0.5 ? -0.5 : model.position.x - posZ,
-    model.position.y + (name === "soldier" ? 0.1 : 0),
+    model.position.y + (name === "soldier" ? 0.1 : Math.random() * 0.2),
     model.position.z - 0.24
   );
 
@@ -366,6 +373,7 @@ function multiBullet(model, multiValue) {
     shootBullet(model, randomPos, "bullet");
     shootBullet(model, -randomPos, "bullet");
   } else if (multiValue === "x3") {
+    console.log("x3");
     const randomPos = Math.random() * 0.1 - 0.05;
     shootBullet(model, randomPos, "bullet");
     shootBullet(model, 0, "bullet");
@@ -486,7 +494,7 @@ function checkCollision() {
 
       if (bulletBox.intersectsBox(portalBox)) {
         scene.remove(bullets[j].mesh);
-        multiBullet(bullets[j].mesh, "x2");
+        multiBullet(bullets[j].mesh, portal.text);
         bullets.splice(j, 1);
       }
     }
@@ -556,12 +564,12 @@ function animate() {
     // Monster & text di chuyển
     if (monsterModels) {
       monsterModels.forEach((monster) => {
-        monster.position.z += 0.008;
+        monster.position.z += 0.042;
       });
     }
     if (numberPoint) {
       numberPoint.forEach((np) => {
-        np.position.z += 0.008;
+        np.position.z += 0.042;
       });
     }
 
