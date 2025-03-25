@@ -258,6 +258,7 @@ function loadFontAndSetupText() {
       setupPortalText();
       setupMonsterText();
       numMonsters = monsterModels.length;
+      // console.log("Số quái: ", numMonsters);
     }, 500);
   });
 }
@@ -374,7 +375,7 @@ function multiBullet(model, multiValue) {
     shootBullet(model, randomPos, "bullet");
     shootBullet(model, -randomPos, "bullet");
   } else if (multiValue === "x3") {
-    console.log("x3");
+    // console.log("x3");
     const randomPos = Math.random() * 0.1 - 0.05;
     shootBullet(model, randomPos, "bullet");
     shootBullet(model, 0, "bullet");
@@ -427,14 +428,17 @@ function checkCollision() {
     const monster = monsterModels[i];
     const obstacleBox = new THREE.Box3()
       .setFromObject(monster)
-      .expandByScalar(0.08);
+      .expandByVector(new THREE.Vector3(0.1, 0.5, 0.1));
+    // const obstacleBoxHelper = new THREE.Box3Helper(obstacleBox, 0xff0000); // Màu đỏ
+    // scene.add(obstacleBoxHelper);
 
+    // console.log(monsterModels[1]);
     if (monster.position.z >= 3.2) {
       scene.remove(monster);
       monsterModels.splice(i, 1);
       scene.remove(numberPoint[i]);
       numberPoint.splice(i, 1);
-      HP-=5
+      HP -= 5;
       document.getElementById("HP").textContent = HP;
     }
 
@@ -442,6 +446,8 @@ function checkCollision() {
       const bulletBox = new THREE.Box3()
         .setFromObject(bullets[j].mesh)
         .expandByScalar(0.05);
+      
+        
 
       if (bulletBox.intersectsBox(obstacleBox)) {
         numberPoint[i].userData.textValue -= 1;
@@ -466,7 +472,7 @@ function checkCollision() {
         if (numberPoint[i].userData.textValue <= 0) {
           point++;
           document.getElementById("point").textContent = point;
-
+          numMonsters-=point;
           scene.remove(monster);
           monsterModels.splice(i, 1);
 
@@ -478,10 +484,19 @@ function checkCollision() {
       }
     }
     // 8.2 Soldier đụng quái => game over
-    if (obstacleBox.intersectsBox(soldierBox) || numMonsters === point || HP <= 0) {
+    if (numMonsters === point || HP <= 0) {
       isMoving = false;
       document.querySelector(".replay").style.display = "flex";
       document.getElementById("score").textContent = point;
+    }
+
+    if (obstacleBox.intersectsBox(soldierBox)) {
+      HP -= 5;
+      scene.remove(monster);
+      monsterModels.splice(i, 1);
+
+      scene.remove(numberPoint[i]);
+      numberPoint.splice(i, 1);
     }
   }
 
@@ -509,25 +524,25 @@ function checkCollision() {
       }
     }
 
-    // Soldier chạm portal => tăng damage
-    if (portalBox.intersectsBox(soldierBox)) {
-      const textValue = numberPointPortal[i].userData.textValue; // "x2" hoặc "x3"
-      // Tăng damage: x2 hay x3
-      if (textValue === "x2") multiDamage += 2;
-      if (textValue === "x3") multiDamage += 3;
+    // // Soldier chạm portal => tăng damage
+    // if (portalBox.intersectsBox(soldierBox)) {
+    //   const textValue = numberPointPortal[i].userData.textValue; // "x2" hoặc "x3"
+    //   // Tăng damage: x2 hay x3
+    //   if (textValue === "x2") multiDamage += 2;
+    //   if (textValue === "x3") multiDamage += 3;
 
-      // Hiển thị
-      document.getElementById("DM").textContent = multiDamage;
+    //   // Hiển thị
+    //   document.getElementById("DM").textContent = multiDamage;
 
-      // Xoá portal
-      scene.remove(portal);
-      portalModel.splice(i, 1);
+    //   // Xoá portal
+    //   scene.remove(portal);
+    //   portalModel.splice(i, 1);
 
-      scene.remove(numberPointPortal[i]);
-      numberPointPortal.splice(i, 1);
+    //   scene.remove(numberPointPortal[i]);
+    //   numberPointPortal.splice(i, 1);
 
-      break;
-    }
+    //   break;
+    // }
   }
 }
 
