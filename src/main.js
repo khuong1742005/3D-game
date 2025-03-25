@@ -37,39 +37,48 @@ function initScene() {
     0.1,
     1000
   );
-  camera.position.set(-0.02, 0.68, 4.07);
+  camera.position.set(-0.02, 0.58, 3.67);
 
   renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
   document.body.appendChild(renderer.domElement);
 
   controls = new OrbitControls(camera, renderer.domElement);
   controls.update();
 
+  //skyboxes --------------------------------
   let materialArray = [];
-  // let texture_ft = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_ft.png');
-  // let texture_bk = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_bk.png');
-  // let texture_dn = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_dn.png');
-  // let texture_lf = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_lf.png');
-  // let texture_rt = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_rt.png');
-  // let texture_up = new THREE.TextureLoader().load('./src/scenes/skyboxes/interstellar_up.png');
 
-  let texture_rt = new THREE.TextureLoader().load('./src/scenes/skyboxes/zpos.png');  // front
-  let texture_lf = new THREE.TextureLoader().load('./src/scenes/skyboxes/zneg.png');  // back
-  let texture_up = new THREE.TextureLoader().load('./src/scenes/skyboxes/ypos.png');  // up
-  let texture_dn = new THREE.TextureLoader().load('./src/scenes/skyboxes/yneg.png');  // down
-  let texture_ft = new THREE.TextureLoader().load('./src/scenes/skyboxes/xpos.png');  // right
-  let texture_bk = new THREE.TextureLoader().load('./src/scenes/skyboxes/xneg.png');  // left
-  
-  materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft })); 
+  let texture_rt = new THREE.TextureLoader().load(
+    "./src/scenes/skyboxes/zpos.png"
+  ); // front
+  let texture_lf = new THREE.TextureLoader().load(
+    "./src/scenes/skyboxes/zneg.png"
+  ); // back
+  let texture_up = new THREE.TextureLoader().load(
+    "./src/scenes/skyboxes/ypos.png"
+  ); // up
+  let texture_dn = new THREE.TextureLoader().load(
+    "./src/scenes/skyboxes/yneg.png"
+  ); // down
+  let texture_ft = new THREE.TextureLoader().load(
+    "./src/scenes/skyboxes/xpos.png"
+  ); // right
+  let texture_bk = new THREE.TextureLoader().load(
+    "./src/scenes/skyboxes/xneg.png"
+  ); // left
+
+  materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft }));
   materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }));
   materialArray.push(new THREE.MeshBasicMaterial({ map: texture_up }));
   materialArray.push(new THREE.MeshBasicMaterial({ map: texture_dn }));
   materialArray.push(new THREE.MeshBasicMaterial({ map: texture_rt }));
   materialArray.push(new THREE.MeshBasicMaterial({ map: texture_lf }));
 
-
-  for(let i = 0; i < materialArray.length; i++) {
+  for (let i = 0; i < materialArray.length; i++) {
     materialArray[i].side = THREE.BackSide;
   }
   let skyboxGeo = new THREE.BoxGeometry(100, 100, 100);
@@ -82,33 +91,84 @@ function initScene() {
   scene.add(hemiLight);
 
   const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+  dirLight.position.set(5, 10, 5); // Thay đổi vị trí cho hợp lý
   dirLight.castShadow = true;
-  dirLight.shadow.camera.top = 2;
-  dirLight.shadow.camera.bottom = -2;
-  dirLight.shadow.camera.left = -2;
-  dirLight.shadow.camera.right = 2;
-  dirLight.shadow.camera.near = 0.1;
-  dirLight.shadow.camera.far = 40;
+  dirLight.position.set(5, 10, 5);
+  dirLight.shadow.camera.top = 10;
+  dirLight.shadow.camera.bottom = -10;
+  dirLight.shadow.camera.left = -10;
+  dirLight.shadow.camera.right = 10;
+  dirLight.shadow.camera.near = 1;
+  dirLight.shadow.camera.far = 50;
+  dirLight.shadow.normalBias = 0.05;
+  dirLight.intensity = 3; // Tăng từ 2 lên 3
+
   scene.add(dirLight);
+
+  // const dirLightHelper = new THREE.CameraHelper(dirLight.shadow.camera);
+  // scene.add(dirLightHelper);
+
+  //spotlight
+  const spotLight = new THREE.SpotLight(0xffffff, 1);
+  spotLight.position.set(10, 20, 10);
+  spotLight.angle = Math.PI / 6;
+  spotLight.penumbra = 0.1;
+  spotLight.decay = 2;
+  spotLight.distance = 50;
+  spotLight.castShadow = true;
+  spotLight.shadow.mapSize.width = 1024;
+  spotLight.shadow.mapSize.height = 1024;
+  spotLight.shadow.camera.near = 1;
+  spotLight.shadow.camera.far = 100;
+  dirLight.shadow.bias = -0.0005;
+
+  scene.add(spotLight);
+
+  // Đặt target cho spotlight
+  // spotLight.target.position.set(0, 0, 0);
+  // scene.add(spotLight.target);
+
+  // Thêm helper để kiểm tra cone của spotlight
+  // const spotLightHelper = new THREE.SpotLightHelper(spotLight);
+  // scene.add(spotLightHelper);
+
+  // sàn
+  const planeGeometry = new THREE.PlaneGeometry(50, 50);
+  const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  plane.rotation.x = -Math.PI / 2;
+  plane.position.y = 0;
+  plane.receiveShadow = true;
+  scene.add(plane);
+
+  // Tạo hình cầu tạo bóng
+  // const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+  // const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+  // const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+  // sphere.position.set(-3, 2, -5);
+  // sphere.castShadow = true;
+  // sphere.receiveShadow = true;
+  // scene.add(sphere);
 }
 
 // ========== 2. Tải đường và nhà ==========
 function loadRoads() {
   const loader = new GLTFLoader();
-  const roadCount = 1000;
-  loader.load(
-    "./src/assets/road.glb",
-    (gltf) => {
-      for (let i = 0; i < roadCount; i++) {
-        const road = gltf.scene.clone();
-        road.position.set(0, 0, -i * 2);
-        scene.add(road);
-        roads.push(road);
-      }
-    },
-    undefined,
-    (error) => console.error("❌ Lỗi khi tải road:", error)
-  );
+  // const roadCount = 1000;
+  // loader.load(
+  //   "./src/assets/road.glb",
+  //   (gltf) => {
+  //     for (let i = 0; i < roadCount; i++) {
+  //       const road = gltf.scene.clone();
+
+  //       road.position.set(0, 0, -i * 2);
+  //       scene.add(road);
+  //       roads.push(road);
+  //     }
+  //   },
+  //   undefined,
+  //   (error) => console.error("❌ Lỗi khi tải road:", error)
+  // );
 
   loader.load(
     "./src/assets/houses.glb",
@@ -116,6 +176,14 @@ function loadRoads() {
       const houseCount = 100;
       for (let i = 0; i < houseCount; i++) {
         const house = gltf.scene.clone();
+
+        house.traverse((obj) => {
+          if (obj.isMesh) {
+            obj.castShadow = true;
+            obj.receiveShadow = true;
+          }
+        });
+
         house.scale.set(0.18, 0.18, 0.18);
         house.position.set(0, 0.11, -i * 7.8);
         house.rotation.y = Math.PI / 2;
@@ -138,7 +206,10 @@ function loadSoldier() {
     scene.add(soldierModel);
 
     soldierModel.traverse((obj) => {
-      if (obj.isMesh) obj.castShadow = true;
+      if (obj.isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      }
     });
 
     const animations = gltf.animations;
@@ -250,6 +321,12 @@ bulletLoader.load(
   "./src/assets/bullet.glb",
   (gltf) => {
     loadedBullet = gltf.scene;
+    loadedBullet.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      }
+    });
     if (soldierModel) startShooting(soldierModel);
   },
   undefined,
@@ -262,6 +339,7 @@ function shootBullet(model, posZ, name) {
   if (!model || !loadedBullet) return;
 
   const bullet = loadedBullet.clone();
+
   bullet.rotation.y = Math.PI;
   bullet.scale.set(0.025, 0.025, 0.025);
 
@@ -395,9 +473,9 @@ function checkCollision() {
     const portalBox = new THREE.Box3()
       .setFromObject(portal)
       .expandByScalar(0.0001);
-      // const portalBoxHelper = new THREE.Box3Helper(portalBox, 0xff0000); // Màu đỏ
-      // scene.add(portalBoxHelper);
-      // Đạn chạm portal => bắn thêm x2
+    // const portalBoxHelper = new THREE.Box3Helper(portalBox, 0xff0000); // Màu đỏ
+    // scene.add(portalBoxHelper);
+    // Đạn chạm portal => bắn thêm x2
     for (let j = 0; j < bullets.length; j++) {
       const bulletBox = new THREE.Box3()
         .setFromObject(bullets[j].mesh)
@@ -450,9 +528,9 @@ function animate() {
 
   if (isMoving) {
     // Di chuyển road
-    roads.forEach((road) => {
-      road.position.z += 0.01;
-    });
+    // roads.forEach((road) => {
+    //   road.position.z += 0.01;
+    // });
 
     houses.forEach((house) => {
       house.position.z += 0.01;

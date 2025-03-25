@@ -20,10 +20,18 @@ export function loadMonsters(scene) {
       for (let i = 0; i < monstersPerGroup; i++) {
         // Tạo vị trí ngẫu nhiên trong phạm vi nhất định
         const randomX = Math.random() - 0.5;
-        const randomZ = baseZ + -1 * i + (Math.random() - 0.5) * 9;
+        const randomZ = baseZ + -1 * i + (Math.random() - 0.5) * 10;
 
         // Clone model bằng SkeletonUtils
         const model = SkeletonUtils.clone(gltf.scene);
+
+        model.traverse((obj) => {
+          if (obj.isMesh) {
+            obj.castShadow = true;
+            obj.receiveShadow = true;
+          }
+        });
+        
         const randomScale = Math.random() * (0.3 - 0.1) + 0.1;
         model.scale.set(randomScale, randomScale, randomScale);
         model.position.set(randomX, 0.1, randomZ);
