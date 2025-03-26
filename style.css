@@ -18,12 +18,16 @@ body {
 .stats-bar {
   padding-left: 20px;
   padding-right: 20px;
-  height: 100px;
+  height: fit-content;
   background: #cdf7f1;
   display: flex;
   flex-direction: column;
   /* position: fixed; */
   justify-content: space-around;
+}
+
+.stats-bar > div {
+  height: fit-content;
 }
 
 .replay {
@@ -108,4 +112,49 @@ body {
   left: 54px;
   font-weight: bold;
   color: white;
+}
+
+.skill {
+  display: flex;
+  width: fit-content;
+  height: 90px;
+  background-color: #e0e0e0;
+  border-bottom-left-radius: 40px;
+  border-bottom-right-radius: 40px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.skill button {
+  width: 50px;
+  height: 50px;
+  margin: 20px;
+  
+  /* Trạng thái mặc định: ẩn */
+  opacity: 0;
+  transform: scale(0);
+
+  /* Thời gian chuyển đổi cho opacity và transform */
+  transition: opacity 0.5s ease, transform 0.5s ease;
+
+  font-size: 16px;
+  background: url(./src/skills/img/x2damage.png);
+  background-position: center;
+  background-size: cover;
+  color: #fff;
+  border: none; 
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Trạng thái hiện (appear) */
+.skill button.appear {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Trạng thái ẩn (hide) */
+.skill button.hide {
+  opacity: 0;
+  transform: scale(0);
 }
