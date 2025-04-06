@@ -8,30 +8,32 @@ import * as skills from "./skills/skills.js";
 
 // ========== Biến toàn cục ==========
 let scene, camera, renderer, controls;
-let soldierModel, mixer; 
-let roads = []; 
-let houses = []; 
-let bullets = []; 
-let monsterModels = []; 
-let mixerMonsters = []; 
-let portalModel = []; 
-let numberPoint = []; 
-let numberPointPortal = []; 
-let loadedFont; 
-let isMoving = true; 
-let point = 0; 
+let soldierModel;
+let mixers = [];
+let soldiers = [];
+let roads = [];
+let houses = [];
+let bullets = [];
+let monsterModels = [];
+let mixerMonsters = [];
+let portalModel = [];
+let numberPoint = [];
+let numberPointPortal = [];
+let loadedFont;
+let isMoving = true;
+let point = 0;
 let HP = 100;
 let moveLeft = false, moveRight = false;
 let shootingInterval = null;  // Biến lưu interval bắn đạn
 let startedshoot = false;     // Cờ kiểm soát đã start bắn chưa
 
-var numMonsters; 
+var numMonsters;
 const moveSpeed = 0.038;
 const clock = new THREE.Clock();
 
 // Biến kỹ năng
-export let multiDamage = 1; 
-export let shootingSpeed = 1000; // Mặc định bắn mỗi 1s
+export let multiDamage = 1;
+export let shootingSpeed = 200; // Mặc định bắn mỗi 1s
 
 // ========== 1. Khởi tạo Scene, Camera, Renderer, Ánh sáng ==========
 function initScene() {
@@ -143,11 +145,11 @@ function loadRoads() {
 }
 
 // ========== 3. Tải Soldier ==========
-function loadSoldier() {
+function loadSoldier(x, y, z) {
   const loader = new GLTFLoader();
   loader.load("./src/assets/Soldier.glb", (gltf) => {
     soldierModel = gltf.scene;
-    soldierModel.position.set(0, 0.1, 3);
+    soldierModel.position.set(x, y, z);
     soldierModel.scale.set(0.17, 0.153, 0.153);
     scene.add(soldierModel);
 
@@ -158,14 +160,18 @@ function loadSoldier() {
       }
     });
 
-    mixer = new THREE.AnimationMixer(soldierModel);
+    const mixer = new THREE.AnimationMixer(soldierModel);
     const runAction = mixer.clipAction(gltf.animations[1]); // index 1: Run
     runAction.play();
+
+    mixers.push(mixer);
+    soldiers.push(soldierModel);
 
     // Gọi hàm bắn
     startShooting(soldierModel);
   });
 }
+
 
 // ========== 4. Dynamic Import Map (load quái, portal) ==========
 function loadRandomMap() {
@@ -241,20 +247,22 @@ function setupMonsterText() {
 // ========== 6. Bắn đạn ==========
 // Hàm khởi tạo bắn liên tục
 function startShooting(model) {
-  // Nếu đã từng start bắn, clear interval cũ
-  if (startedshoot) {
-    clearInterval(shootingInterval);
+  // Gắn trạng thái bắn vào chính model
+  if (model.userData.startedshoot) {
+    clearInterval(model.userData.shootingInterval);
   }
 
-  shootingInterval = setInterval(() => {
+  const interval = setInterval(() => {
     if (model) {
       shootBullet(model, 0, "soldier");
     }
   }, shootingSpeed);
 
-  // Đánh dấu đã start bắn
-  startedshoot = true;
+  // Lưu thông tin bắn vào model
+  model.userData.shootingInterval = interval;
+  model.userData.startedshoot = true;
 }
+
 
 let loadedBullet = null;
 const bulletLoader = new GLTFLoader();
@@ -325,6 +333,14 @@ function updateBullets() {
       bullets.splice(i, 1);
       i--;
     }
+  }
+}
+
+// ========== 6,5. Xử lý tạo đa nhân vật =======
+function multiSoldier(model, multiValue) {
+  if (soldiers.length < 1 || !model) return;
+  if (multiValue === "x2") {
+    loadSoldier(0.1, 0.1, 3);
   }
 }
 
@@ -443,6 +459,32 @@ function checkCollision() {
         bullets.splice(j, 1);
       }
     }
+
+    // Soldier chạm portal => +2
+    for (let j = 0; j < soldiers.length; j++) {
+      const soldier = soldiers[j];
+
+      // Kiểm tra đã sinh chưa
+      if (soldier.userData.hasSpawned) continue;
+
+      const soldierBox = new THREE.Box3()
+        .setFromObject(soldier)
+        .expandByScalar(0.0001);
+
+      if (soldierBox.intersectsBox(portalBox)) {
+        multiSoldier(soldier, "x2");
+
+        // Đặt cờ đã sinh
+        soldier.userData.hasSpawned = true;
+
+        // Sau 2 giây thì cho phép sinh lại
+        setTimeout(() => {
+          soldier.userData.hasSpawned = false;
+        }, 2000);
+
+        break;
+      }
+    }
   }
 }
 
@@ -451,7 +493,7 @@ function animate() {
   requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
-  if (mixer) mixer.update(delta);
+  mixers.forEach((mixer) => mixer.update(delta));
   if (mixerMonsters && mixerMonsters.length) {
     mixerMonsters.forEach((mx) => mx.update(delta));
   }
@@ -479,22 +521,24 @@ function animate() {
 
     if (monsterModels) {
       monsterModels.forEach((monster) => {
-        monster.position.z += 0.042;
+        monster.position.z += 0.02
       });
     }
     if (numberPoint) {
       numberPoint.forEach((np) => {
-        np.position.z += 0.042;
+        np.position.z += 0.02;
       });
     }
 
     // Soldier di chuyển
     if (soldierModel) {
       if (moveLeft && soldierModel.position.x > -0.5) {
-        soldierModel.position.x -= moveSpeed;
+        for (let i = 0; i < soldiers.length; i++)
+          soldiers[i].position.x -= moveSpeed;
       }
       if (moveRight && soldierModel.position.x < 0.5) {
-        soldierModel.position.x += moveSpeed;
+        for (let i = 0; i < soldiers.length; i++)
+          soldiers[i].position.x += moveSpeed;
       }
     }
 
@@ -511,7 +555,7 @@ function startGame() {
   initScene();
   initEvents();
   loadRoads();
-  loadSoldier();
+  loadSoldier(0, 0.1, 3);
 
   // Dynamic import map -> khi xong thì load font & animate
   loadRandomMap().then(() => {
@@ -522,12 +566,12 @@ function startGame() {
   // Tạo các skill định kỳ
   // Skill 1 (x2damage) mỗi 20-25 giây
   setInterval(() => {
-    addSkill1();
+    // addSkill1();
   }, getRandomInt(20000, 25000));
 
   // Skill 2 (fastBullet) mỗi 5-10 giây
   setInterval(() => {
-    addSkill2();
+    // addSkill2();
   }, getRandomInt(2000, 3000));
 }
 
@@ -546,7 +590,7 @@ function addSkill1() {
 function addSkill2() {
   skills.fastBullet(shootingSpeed);
   shootingSpeed *= 0.8;
-  
+
   if (soldierModel) {
     startShooting(soldierModel);
   }
