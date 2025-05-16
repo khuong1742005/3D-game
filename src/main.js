@@ -37,7 +37,7 @@ const clock = new THREE.Clock();
 
 // Biến kỹ năng
 export let multiDamage = 1;
-export let shootingSpeed = 200; // Mặc định bắn mỗi 1s
+export let shootingSpeed = 200;
 
 // ========== 1. Khởi tạo Scene, Camera, Renderer, Ánh sáng ==========
 function initScene() {
@@ -151,8 +151,10 @@ function loadRoads() {
             obj.receiveShadow = true;
           }
         });
-        house.scale.set(0.18457, 0.18, 0.18);
-        house.position.set(0, 0.11, -i * 11.68);
+        let multiplier = 1.7;
+
+        house.scale.set(0.18457 * multiplier, 0.17 * multiplier, 0.20 * multiplier);
+        house.position.set(0, 0.11, -i * 19.68);
         house.rotation.y = Math.PI / 2;
         scene.add(house);
         houses.push(house);
@@ -432,13 +434,12 @@ function updateBullets() {
 function multiSoldier(model, multiValue) {
   if (soldiers.length < 1 || !model) return;
   if (multiValue > 0) {
-    // cái này lag quá nên để tạm là 1 nghen
-    for (let i = 1; i <= 1; ++i) {
+    for (let i = 1; i <= multiValue / 2; ++i) {
       loadSoldier(
-      model.position.x + Math.random() * 0.2,
-      model.position.y,
-      model.position.z + Math.random() * 0.2
-    );
+        model.position.x + Math.random() * 0.2,
+        model.position.y,
+        model.position.z + Math.random() * 0.2
+      );
     }
   }
 }
@@ -466,6 +467,7 @@ function checkCollision() {
   soldier_Monster();
   bullet_portal();
   soldier_Portal();
+  check_lengthOfModels();
 }
 
 function bullet_portal() {
@@ -590,7 +592,7 @@ function bullet_monster() {
 function soldier_Monster() {
   for (let j = 0; j < soldiers.length; ++j) {
     const soldierBox = new THREE.Box3()
-      .setFromObject(soldierModel)
+      .setFromObject(soldiers[j])
       .expandByScalar(-0.03);
     for (let i = monsterModels.length - 1; i >= 0; i--) {
       const monster = monsterModels[i];
@@ -604,10 +606,16 @@ function soldier_Monster() {
         monsterModels.splice(i, 1);
         scene.remove(numberPoint[i]);
         numberPoint.splice(i, 1);
+
+        clearInterval(soldiers[j].userData.shootingInterval);
+        scene.remove(soldiers[j]);
+        soldiers.splice(j, 1);
+        
+
         // stop game
-        isMoving = false;
-        document.querySelector(".replay").style.display = "flex";
-        document.getElementById("score").textContent = point;
+        // isMoving = false;
+        // document.querySelector(".replay").style.display = "flex";
+        // document.getElementById("score").textContent = point;
       }
     }
   }
@@ -623,14 +631,12 @@ function soldier_Portal() {
     // Soldier chạm portal => +2
     for (let j = 0; j < soldiers.length; j++) {
       const soldier = soldiers[j];
-      // Kiểm tra đã sinh chưa
       if (soldier.userData.hasSpawned) continue;
 
       const soldierBox = new THREE.Box3()
         .setFromObject(soldier)
         .expandByScalar(0.0001);
       if (soldierBox.intersectsBox(portalBox)) {
-        
         multiSoldier(soldier, numberPointPlusPortal[i].userData.textValue);
 
         //=======delete chữ và cổng====================
@@ -640,7 +646,7 @@ function soldier_Portal() {
         numberPointPlusPortal.splice(i, 1);
         // Đặt cờ đã sinh
         soldier.userData.hasSpawned = true;
-        
+
         // Sau 2 giây thì cho phép sinh lại
         setTimeout(() => {
           soldier.userData.hasSpawned = false;
@@ -652,6 +658,13 @@ function soldier_Portal() {
   }
 }
 
+function check_lengthOfModels() {
+  if (monsterModels.length === 0 || HP <= 0 || soldiers.length === 0) {
+    isMoving = false;
+    document.querySelector(".replay").style.display = "flex";
+    document.getElementById("score").textContent = point;
+  }
+}
 // ========== 9. Vòng lặp animate ==========
 function animate() {
   requestAnimationFrame(animate);

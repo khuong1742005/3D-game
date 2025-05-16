@@ -32,7 +32,7 @@ export async function loadMonster(scene) {
         });
 
         const randomScale = Math.random() * (0.3 - 0.1) + 0.1;
-        model.Health = Math.floor(randomScale * 10) * 5;
+        model.Health = Math.floor(randomScale * 10) * (i + 8);
         model.scale.set(randomScale, randomScale, randomScale);
         model.position.set(randomX, 0.1, randomZ);
         scene.add(model);

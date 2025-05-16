@@ -10,14 +10,13 @@ export async function loadMonster(scene) {
   // loadAsync trả về Promise<GLTF>
   const gltf = await loader.loadAsync("./src/assets/monter_run1.glb");
 
-  const totalGroups = 3;
+  const totalGroups = 8;
   const monstersPerGroup = 5;
 
   for (let groupIndex = 0; groupIndex < totalGroups; groupIndex++) {
     for (let i = 0; i < monstersPerGroup; i++) {
       const randomX = Math.random() * (0.5 - 0.1) + 0.1;
       const randomZ = -5 + -13 * i + (Math.random() - 0.5) * 12 - 5;
-
       const model = SkeletonUtils.clone(gltf.scene);
       model.traverse((obj) => {
         if (obj.isMesh) {
@@ -27,7 +26,7 @@ export async function loadMonster(scene) {
       });
 
       const randomScale = Math.random() * (0.3 - 0.1) + 0.1;
-      model.Health = Math.floor(randomScale * 10) * 5;
+      model.Health = Math.floor(randomScale * 10) * 30;
       model.scale.set(randomScale, randomScale, randomScale);
       model.position.set(randomX, 0.1, randomZ);
       scene.add(model);
